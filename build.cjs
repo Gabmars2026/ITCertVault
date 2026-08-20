@@ -44,10 +44,12 @@ const orangeIcon = "<link rel=\"icon\" href=\"data:image/svg+xml,%3Csvg xmlns='h
 html = html.replace(/<head>/i, '<head>' + orangeIcon + '<meta name="theme-color" content="#f97316">');
 
 const safeMeta = JSON.stringify(meta).replace(/</g, '\\u003c');
+const runtimePatch = "document.title=(document.title||'ITCertVault').replace(/CertForge/g,'ITCertVault');";
+const runtimePatchFixed = "var nextTitle=(document.title||'ITCertVault').replace(/CertForge/g,'ITCertVault');if(document.title!==nextTitle)document.title=nextTitle;";
 const runtimeTags =
   '<script>window.ITCV_META=' + safeMeta + ';window.ITCV_DOMAINS={};window.ITCV_VIDEOS={};</script>' +
   [1, 2, 3, 4].map(i => '<script src="./itcv-runtime-' + i + '.js"></script>').join('') +
-  '<script>Function(window.ITCV_RUNTIME_SRC||"")();</script>';
+  '<script>window.ITCV_RUNTIME_SRC=(window.ITCV_RUNTIME_SRC||"").replace(' + JSON.stringify(runtimePatch) + ',' + JSON.stringify(runtimePatchFixed) + ');Function(window.ITCV_RUNTIME_SRC||"")();</script>';
 
 const marker = 'var META=window.CERT_META';
 const markerPos = html.indexOf(marker);
