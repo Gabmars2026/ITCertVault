@@ -46,10 +46,11 @@ html = html.replace(/<head>/i, '<head>' + orangeIcon + '<meta name="theme-color"
 const safeMeta = JSON.stringify(meta).replace(/</g, '\\u003c');
 const runtimePatch = "document.title=(document.title||'ITCertVault').replace(/CertForge/g,'ITCertVault');";
 const runtimePatchFixed = "var nextTitle=(document.title||'ITCertVault').replace(/CertForge/g,'ITCertVault');if(document.title!==nextTitle)document.title=nextTitle;";
+const observerPatch = "new MutationObserver(function(m){m.forEach(function(x){x.addedNodes.forEach(function(n){if(n.nodeType===1||n.nodeType===3)cleanBrand(n.nodeType===1?n:n.parentNode);});});}).observe(document.documentElement,{childList:true,subtree:true});";
 const runtimeTags =
   '<script>window.ITCV_META=' + safeMeta + ';window.ITCV_DOMAINS={};window.ITCV_VIDEOS={};</script>' +
   [1, 2, 3, 4].map(i => '<script src="./itcv-runtime-' + i + '.js"></script>').join('') +
-  '<script>window.ITCV_RUNTIME_SRC=(window.ITCV_RUNTIME_SRC||"").replace(' + JSON.stringify(runtimePatch) + ',' + JSON.stringify(runtimePatchFixed) + ');Function(window.ITCV_RUNTIME_SRC||"")();</script>';
+  '<script>window.ITCV_RUNTIME_SRC=(window.ITCV_RUNTIME_SRC||"").replace(' + JSON.stringify(runtimePatch) + ',' + JSON.stringify(runtimePatchFixed) + ').replace(' + JSON.stringify(observerPatch) + ',"");Function(window.ITCV_RUNTIME_SRC||"")();</script>';
 
 const marker = 'var META=window.CERT_META';
 const markerPos = html.indexOf(marker);
