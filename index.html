@@ -44,7 +44,7 @@ html,body{margin:0;min-height:100%;background:#0d1117;color:#e6edf3;font-family:
     const orangeIcon="<link rel=\"icon\" href=\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cpath fill='%23f97316' d='M32 3 55 12v17c0 15-9.8 26.2-23 32C18.8 55.2 9 44 9 29V12L32 3Z'/%3E%3Cpath fill='none' stroke='white' stroke-width='5' d='m21 31 7 7 15-16'/%3E%3C/svg%3E\">";
     html=html.replace(/<head>/i,'<head>'+orangeIcon+'<meta name="theme-color" content="#f97316">');
 
-    const runtimeTags='<script>window.ITCV_META='+JSON.stringify(meta)+';window.ITCV_DOMAINS='+JSON.stringify(domains)+';window.ITCV_VIDEOS='+JSON.stringify(videos)+';<\/script>'+[1,2,3,4].map(i=>'<script src="'+assetPrefix+'itcv-runtime-'+i+'.js"><\/script>').join('')+'<script>Function(window.ITCV_RUNTIME_SRC||"")();<\/script>';
+    const runtimeTags='<script>window.ITCV_META='+JSON.stringify(meta)+';window.ITCV_DOMAINS='+JSON.stringify(domains)+';window.ITCV_VIDEOS='+JSON.stringify(videos)+';<\/script>'+[1,2,3,4].map(i=>'<script src="'+assetPrefix+'itcv-runtime-'+i+'.js"><\/script>').join('')+'<script>Function(window.ITCV_RUNTIME_SRC||"")();<\/script>'+'<script src="'+assetPrefix+'itcv-ui-fix.js"><\/script>';
     const marker='var META=window.CERT_META';
     const mp=html.indexOf(marker);
     if(mp<0) throw new Error('The ITCertVault base application marker was not found.');
