@@ -79,9 +79,8 @@ const safeVisualCss = `<style id="itcv-safe-visual-layout-v21">
 .v18-image-page figure>img{display:block!important;width:100%!important;height:auto!important;max-height:none!important;object-fit:contain!important}
 .itcv-v20-media{height:auto!important;max-height:none!important;overflow:visible!important}
 .itcv-v20-media img,.itcv-v20-media svg{display:block!important;width:100%!important;height:auto!important;max-height:none!important;object-fit:contain!important}
-/* Keep the old Analysis Images overlay from covering current book/gallery visuals. */
-html[data-itcv-aplus-book-v16] .itcv-image-overlay-v15,
-html[data-itcv-book-route-v17] .itcv-image-overlay-v15{display:none!important}
+/* Remove the legacy full-size/analysis overlay everywhere so it never covers diagrams. */
+.itcv-image-overlay-v15{display:none!important}
 @media(max-width:700px){
   .itcv-v10-visual-grid,.a13-images,.a16-visual-grid,.v18-image-grid{grid-template-columns:1fr!important}
   .itcv-v10-visual-body img,.itcv-v10-visual-body svg,.a13-images img,.a16-visual-grid img,.a16-inline-figure img,.v18-image-card img{width:100%!important;height:auto!important}
