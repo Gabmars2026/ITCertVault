@@ -1,7 +1,5 @@
 const fs = require('fs');
 const path = require('path');
-const vm = require('vm');
-const zlib = require('zlib');
 
 const root = __dirname;
 const out = path.join(root, 'dist');
@@ -20,45 +18,36 @@ function copyTree(src, dest) {
     else if (entry.isFile()) fs.copyFileSync(from, to);
   }
 }
+
+// Keep the small, resilient index.html loader as the production entry point.
+// It loads base.html in the browser, injects certification metadata before the
+// legacy application starts, and can display startup failures instead of a
+// silent blank page. The previous build replaced this loader with the entire
+// generated base.html, which removed those safeguards.
 copyTree(root, out);
 
-const basePath = path.join(root, 'base.html');
-if (!fs.existsSync(basePath)) throw new Error('base.html was not found at the project root.');
-let html = fs.readFileSync(basePath, 'utf8');
+const required = [
+  'index.html',
+  'base.html',
+  'itcv-ui-fix.js',
+  'itcv-runtime-1.js',
+  'itcv-runtime-2.js',
+  'itcv-runtime-3.js',
+  'itcv-runtime-4.js',
+  'itcv-seed-meta-1.js',
+  'itcv-seed-meta-2.js',
+  'itcv-seed-meta-3.js',
+  'itcv-seed-meta-4.js'
+];
 
-// Rebuild the certification metadata at build time so the browser never has
-// to fetch base.html or decompress the metadata before the app can start.
-const seedContext = { window: {} };
-for (let i = 1; i <= 4; i++) {
-  const seedPath = path.join(root, `itcv-seed-meta-${i}.js`);
-  if (!fs.existsSync(seedPath)) throw new Error(`Missing ${path.basename(seedPath)}`);
-  vm.runInNewContext(fs.readFileSync(seedPath, 'utf8'), seedContext, { filename: seedPath });
+for (const file of required) {
+  const builtPath = path.join(out, file);
+  if (!fs.existsSync(builtPath)) throw new Error(`Missing required production file: ${file}`);
 }
-const b64 = seedContext.window.ITCV_META_B64 || '';
-if (!b64) throw new Error('Certification metadata seed is empty.');
-const meta = JSON.parse(zlib.gunzipSync(Buffer.from(b64, 'base64')).toString('utf8'));
 
-html = html.replace(/CertForge/g, 'ITCertVault');
+const index = fs.readFileSync(path.join(out, 'index.html'), 'utf8');
+if (!index.includes('Loading your certification vault')) {
+  throw new Error('Production index.html is not the resilient ITCertVault loader.');
+}
 
-const orangeIcon = "<link rel=\"icon\" href=\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cpath fill='%23f97316' d='M32 3 55 12v17c0 15-9.8 26.2-23 32C18.8 55.2 9 44 9 29V12L32 3Z'/%3E%3Cpath fill='none' stroke='white' stroke-width='5' d='m21 31 7 7 15-16'/%3E%3C/svg%3E\">";
-html = html.replace(/<head>/i, '<head>' + orangeIcon + '<meta name="theme-color" content="#f97316">');
-
-const safeMeta = JSON.stringify(meta).replace(/</g, '\\u003c');
-const runtimePatch = "document.title=(document.title||'ITCertVault').replace(/CertForge/g,'ITCertVault');";
-const runtimePatchFixed = "var nextTitle=(document.title||'ITCertVault').replace(/CertForge/g,'ITCertVault');if(document.title!==nextTitle)document.title=nextTitle;";
-const observerPatch = "new MutationObserver(function(m){m.forEach(function(x){x.addedNodes.forEach(function(n){if(n.nodeType===1||n.nodeType===3)cleanBrand(n.nodeType===1?n:n.parentNode);});});}).observe(document.documentElement,{childList:true,subtree:true});";
-const runtimeTags =
-  '<script>window.ITCV_META=' + safeMeta + ';window.CERT_META=window.ITCV_META;window.ITCV_DOMAINS=window.ITCV_DOMAINS||{};window.ITCV_VIDEOS=window.ITCV_VIDEOS||{};window.CERT_DOMAINS=window.CERT_DOMAINS||{};window.CERT_VIDEOS=window.CERT_VIDEOS||{};</script>' +
-  [1, 2, 3, 4].map(i => '<script src="./itcv-runtime-' + i + '.js"></script>').join('') +
-  '<script>window.ITCV_RUNTIME_SRC=(window.ITCV_RUNTIME_SRC||"").replace(' + JSON.stringify(runtimePatch) + ',' + JSON.stringify(runtimePatchFixed) + ').replace(' + JSON.stringify(observerPatch) + ',"");try{Function(window.ITCV_RUNTIME_SRC||"")();}catch(e){console.error("[ITCertVault] runtime bootstrap failed; continuing with base metadata",e);window.CERT_META=window.CERT_META||window.ITCV_META||[];window.CERT_DOMAINS=window.CERT_DOMAINS||{};window.CERT_VIDEOS=window.CERT_VIDEOS||{};}</script>';
-
-const marker = 'var META=window.CERT_META';
-const markerPos = html.indexOf(marker);
-if (markerPos < 0) throw new Error('The ITCertVault base application marker was not found.');
-const scriptPos = html.lastIndexOf('<script', markerPos);
-if (scriptPos < 0) throw new Error('The ITCertVault application script could not be located.');
-
-html = html.slice(0, scriptPos) + runtimeTags + html.slice(scriptPos);
-fs.writeFileSync(path.join(out, 'index.html'), html, 'utf8');
-
-console.log(`Built dist/index.html from base.html (${html.length.toLocaleString()} characters).`);
+console.log(`Built resilient ITCertVault production loader (${index.length.toLocaleString()} characters).`);
