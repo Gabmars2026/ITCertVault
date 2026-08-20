@@ -57,38 +57,6 @@ html = html.replace(/CertForge/g, 'ITCertVault');
 const orangeIcon = "<link rel=\"icon\" href=\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cpath fill='%23f97316' d='M32 3 55 12v17c0 15-9.8 26.2-23 32C18.8 55.2 9 44 9 29V12L32 3Z'/%3E%3Cpath fill='none' stroke='white' stroke-width='5' d='m21 31 7 7 15-16'/%3E%3C/svg%3E\">";
 html = html.replace(/<head>/i, '<head>' + orangeIcon + '<meta name="theme-color" content="#f97316">');
 
-// Safe, CSS-only visual repair. This deliberately avoids MutationObserver and DOM rescans.
-// The original certification gallery uses a fixed 16:9 viewport + object-fit:cover,
-// which crops text-heavy diagrams. These overrides preserve each visual's full canvas.
-const safeVisualCss = `<style id="itcv-safe-visual-layout-v21">
-.itcv-v10-visual{overflow:visible!important}
-.itcv-v10-visual-body{aspect-ratio:auto!important;height:auto!important;min-height:0!important;max-height:none!important;overflow:visible!important;display:block!important}
-.itcv-v10-visual-body img,.itcv-v10-visual-body svg{display:block!important;width:100%!important;max-width:100%!important;height:auto!important;max-height:none!important;object-fit:contain!important;object-position:center center!important}
-.rb14-figure{overflow:visible!important}
-.rb14-figure .rb14-visual{min-height:0!important;height:auto!important;max-height:none!important;overflow:visible!important}
-.rb14-figure img,.rb14-figure svg{display:block!important;width:100%!important;max-width:100%!important;height:auto!important;max-height:none!important;object-fit:contain!important}
-.a13-images button{overflow:visible!important}
-.a13-images button span{aspect-ratio:auto!important;height:auto!important;min-height:0!important;overflow:visible!important}
-.a13-images img{display:block!important;width:100%!important;height:auto!important;max-height:none!important;object-fit:contain!important}
-.a16-visual-grid figure,.a16-inline-figure{overflow:visible!important}
-.a16-visual-grid img,.a16-inline-figure img{display:block!important;width:100%!important;height:auto!important;max-height:none!important;object-fit:contain!important}
-.v18-image-card{overflow:visible!important}
-.v18-image-card>span{aspect-ratio:auto!important;height:auto!important;overflow:visible!important}
-.v18-image-card img{display:block!important;width:100%!important;height:auto!important;max-height:none!important;object-fit:contain!important}
-.v18-image-page figure{overflow:visible!important}
-.v18-image-page figure>img{display:block!important;width:100%!important;height:auto!important;max-height:none!important;object-fit:contain!important}
-.itcv-v20-media{height:auto!important;max-height:none!important;overflow:visible!important}
-.itcv-v20-media img,.itcv-v20-media svg{display:block!important;width:100%!important;height:auto!important;max-height:none!important;object-fit:contain!important}
-/* Keep the old Analysis Images overlay from covering current book/gallery visuals. */
-html[data-itcv-aplus-book-v16] .itcv-image-overlay-v15,
-html[data-itcv-book-route-v17] .itcv-image-overlay-v15{display:none!important}
-@media(max-width:700px){
-  .itcv-v10-visual-grid,.a13-images,.a16-visual-grid,.v18-image-grid{grid-template-columns:1fr!important}
-  .itcv-v10-visual-body img,.itcv-v10-visual-body svg,.a13-images img,.a16-visual-grid img,.a16-inline-figure img,.v18-image-card img{width:100%!important;height:auto!important}
-}
-</style>`;
-html = html.replace(/<\/head>/i, safeVisualCss + '</head>');
-
 const safeMeta = JSON.stringify(meta).replace(/</g, '\\u003c');
 const runtimeTags =
   '<script>window.ITCV_META=' + safeMeta + ';window.ITCV_DOMAINS={};window.ITCV_VIDEOS={};</script>' +
