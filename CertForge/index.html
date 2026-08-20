@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>ITCertVault — IT Certification Training</title>
+<meta name="theme-color" content="#f97316">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cpath fill='%23f97316' d='M32 3 55 12v17c0 15-9.8 26.2-23 32C18.8 55.2 9 44 9 29V12L32 3Z'/%3E%3Cpath fill='none' stroke='white' stroke-width='5' d='m21 31 7 7 15-16'/%3E%3C/svg%3E">
+<style>
+html,body{margin:0;min-height:100%;background:#0d1117;color:#e6edf3;font-family:Inter,Segoe UI,Arial,sans-serif}.boot{min-height:100vh;display:grid;place-items:center}.boot-card{border:1px solid #30363d;border-radius:18px;padding:28px 34px;background:#161b22;box-shadow:0 18px 70px #0008;text-align:center}.mark{color:#f97316;font-size:28px;font-weight:800}.muted{color:#8b949e;margin-top:8px}.err{max-width:720px;text-align:left;white-space:pre-wrap;color:#ffb4a8}
+</style>
+<script src="itcv-seed-meta-1.js"></script>
+<script src="itcv-seed-meta-2.js"></script>
+<script src="itcv-seed-meta-3.js"></script>
+<script src="itcv-seed-meta-4.js"></script>
+</head>
+<body><div class="boot"><div class="boot-card"><div class="mark">ITCertVault</div><div class="muted">Loading your certification vault…</div></div></div>
+<script>
+(async()=>{
+  try{
+    async function decodeSeed(b64){
+      const bytes=Uint8Array.from(atob(b64),c=>c.charCodeAt(0));
+      const stream=new Blob([bytes]).stream().pipeThrough(new DecompressionStream('gzip'));
+      return JSON.parse(await new Response(stream).text());
+    }
+
+    if(!window.ITCV_META_B64) throw new Error('ITCertVault certification seed did not load.');
+
+    const appBase=new URL('.',window.location.href);
+    const assetPrefix=appBase.pathname.endsWith('/')?appBase.pathname:appBase.pathname+'/';
+    const [baseR,meta]=await Promise.all([
+      fetch(new URL('base.html',appBase),{cache:'no-cache'}),
+      decodeSeed(window.ITCV_META_B64)
+    ]);
+    const domains={},videos={};
+
+    if(!baseR.ok) throw new Error('Could not load the ITCertVault base site ('+baseR.status+').');
+    const base=await baseR.text();
+    let html=base.replace(/CertForge/g,'ITCertVault');
+
+    html=html.replace(/(["'])assets\//g,(m,q)=>q+assetPrefix+'assets/');
+    html=html.replace(/(<script\s+[^>]*src=["'])(?!https?:|\/|data:|blob:)([^"']+)(["'])/gi,(m,a,src,q)=>a+assetPrefix+src+q);
+
+    const orangeIcon="<link rel=\"icon\" href=\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cpath fill='%23f97316' d='M32 3 55 12v17c0 15-9.8 26.2-23 32C18.8 55.2 9 44 9 29V12L32 3Z'/%3E%3Cpath fill='none' stroke='white' stroke-width='5' d='m21 31 7 7 15-16'/%3E%3C/svg%3E\">";
+    html=html.replace(/<head>/i,'<head>'+orangeIcon+'<meta name="theme-color" content="#f97316">');
+
+    const runtimeTags='<script>window.ITCV_META='+JSON.stringify(meta)+';window.ITCV_DOMAINS='+JSON.stringify(domains)+';window.ITCV_VIDEOS='+JSON.stringify(videos)+';<\/script>'+[1,2,3,4].map(i=>'<script src="'+assetPrefix+'itcv-runtime-'+i+'.js"><\/script>').join('')+'<script>Function(window.ITCV_RUNTIME_SRC||"")();<\/script>';
+    const marker='var META=window.CERT_META';
+    const mp=html.indexOf(marker);
+    if(mp<0) throw new Error('The ITCertVault base application marker was not found.');
+    const sp=html.lastIndexOf('<script',mp);
+    if(sp<0) throw new Error('The ITCertVault application script could not be located.');
+
+    html=html.slice(0,sp)+runtimeTags+html.slice(sp);
+    document.open();document.write(html);document.close();
+  }catch(e){
+    document.body.innerHTML='<div class="boot"><div class="boot-card err"><div class="mark">ITCertVault</div><h2>Site load error</h2><div>'+String(e&&e.message||e)+'</div></div></div>';
+  }
+})();
+</script></body></html>
