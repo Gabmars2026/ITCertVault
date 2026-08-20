@@ -58,70 +58,10 @@ const orangeIcon = "<link rel=\"icon\" href=\"data:image/svg+xml,%3Csvg xmlns='h
 html = html.replace(/<head>/i, '<head>' + orangeIcon + '<meta name="theme-color" content="#f97316">');
 
 const safeMeta = JSON.stringify(meta).replace(/</g, '\\u003c');
-
-// The packaged runtime contains an old whole-page branding MutationObserver.
-// Remove it before executing the runtime so startup cannot get trapped in a
-// DOM mutation loop. Keep the title replacement idempotent as well.
-const runtimePatch = "document.title=(document.title||'ITCertVault').replace(/CertForge/g,'ITCertVault');";
-const runtimePatchFixed = "var nextTitle=(document.title||'ITCertVault').replace(/CertForge/g,'ITCertVault');if(document.title!==nextTitle)document.title=nextTitle;";
-const observerPatch = "new MutationObserver(function(m){m.forEach(function(x){x.addedNodes.forEach(function(n){if(n.nodeType===1||n.nodeType===3)cleanBrand(n.nodeType===1?n:n.parentNode);});});}).observe(document.documentElement,{childList:true,subtree:true});";
-
-// Repair certification-image sizing without running a continuous DOM observer.
-// The scan runs at startup and again after user interaction, which is enough for
-// dynamically rendered certification cards without keeping the page perpetually busy.
-const visualLayoutFix = String.raw`(function(){
-'use strict';
-var STYLE_ID='itcv-visual-layout-fix';
-function installStyles(){
-  if(document.getElementById(STYLE_ID))return;
-  var s=document.createElement('style');
-  s.id=STYLE_ID;
-  s.textContent='.itcv-visual-card-fixed{overflow:visible!important}.itcv-visual-media-shell-fixed{height:auto!important;min-height:0!important;max-height:none!important;overflow:visible!important;aspect-ratio:auto!important}.itcv-visual-media-fixed{display:block!important;width:100%!important;max-width:100%!important;height:auto!important;max-height:none!important;object-fit:contain!important;object-position:center center!important;margin-left:auto!important;margin-right:auto!important;clip-path:none!important}.itcv-fullsize-control-wrap{position:static!important;inset:auto!important;left:auto!important;right:auto!important;top:auto!important;bottom:auto!important;transform:none!important;width:100%!important;height:auto!important;display:flex!important;justify-content:center!important;align-items:center!important;margin:10px 0 0!important;padding:0!important;pointer-events:auto!important}.itcv-fullsize-control{position:static!important;inset:auto!important;left:auto!important;right:auto!important;top:auto!important;bottom:auto!important;transform:none!important;float:none!important;display:inline-flex!important;align-items:center!important;justify-content:center!important;width:max-content!important;max-width:calc(100% - 24px)!important;height:auto!important;margin:10px auto 0!important;z-index:2!important;white-space:normal!important}@media(max-width:700px){.itcv-fullsize-control{max-width:calc(100% - 16px)!important}.itcv-visual-media-fixed{width:100%!important;height:auto!important}}';
-  (document.head||document.documentElement).appendChild(s);
-}
-function isFullSize(el){return /view\s+full\s+size/i.test((el.textContent||'').replace(/\s+/g,' ').trim());}
-function mark(control){
-  if(!control||!control.classList||!isFullSize(control))return;
-  control.classList.add('itcv-fullsize-control');
-  var immediate=control.parentElement;
-  if(immediate&&!immediate.querySelector('img'))immediate.classList.add('itcv-fullsize-control-wrap');
-  var node=immediate,card=null;
-  for(var i=0;i<7&&node&&node!==document.body;i++,node=node.parentElement){
-    if(node.querySelector&&node.querySelector('img')){card=node;break;}
-  }
-  if(!card)return;
-  card.classList.add('itcv-visual-card-fixed');
-  card.querySelectorAll('img').forEach(function(media){
-    media.classList.add('itcv-visual-media-fixed');
-    var shell=media.parentElement;
-    if(shell&&shell!==card)shell.classList.add('itcv-visual-media-shell-fixed');
-  });
-}
-function run(){
-  installStyles();
-  var root=document.body||document.documentElement;
-  if(!root||!root.querySelectorAll)return;
-  root.querySelectorAll('button,a,[role="button"]').forEach(mark);
-}
-function startup(){
-  run();
-  setTimeout(run,250);
-  setTimeout(run,1000);
-}
-installStyles();
-if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',startup,{once:true});else startup();
-var clickTimer=0;
-document.addEventListener('click',function(){
-  clearTimeout(clickTimer);
-  clickTimer=setTimeout(run,120);
-},true);
-})();`;
-
 const runtimeTags =
   '<script>window.ITCV_META=' + safeMeta + ';window.ITCV_DOMAINS={};window.ITCV_VIDEOS={};</script>' +
   [1, 2, 3, 4].map(i => '<script src="./itcv-runtime-' + i + '.js"></script>').join('') +
-  '<script>window.ITCV_RUNTIME_SRC=(window.ITCV_RUNTIME_SRC||"").replace(' + JSON.stringify(runtimePatch) + ',' + JSON.stringify(runtimePatchFixed) + ').replace(' + JSON.stringify(observerPatch) + ',"");Function(window.ITCV_RUNTIME_SRC||"")();</script>' +
-  '<script>' + visualLayoutFix.replace(/<\/script/gi, '<\\/script') + '</script>';
+  '<script>Function(window.ITCV_RUNTIME_SRC||"")();</script>';
 
 const marker = 'var META=window.CERT_META';
 const markerPos = html.indexOf(marker);
