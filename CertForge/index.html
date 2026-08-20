@@ -7,7 +7,7 @@
 <meta name="theme-color" content="#f97316">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cpath fill='%23f97316' d='M32 3 55 12v17c0 15-9.8 26.2-23 32C18.8 55.2 9 44 9 29V12L32 3Z'/%3E%3Cpath fill='none' stroke='white' stroke-width='5' d='m21 31 7 7 15-16'/%3E%3C/svg%3E">
 <style>
-html,body{margin:0;min-height:100%;background:#0d1117;color:#e6edf3;font-family:Inter,Segoe UI,Arial,sans-serif}.boot{min-height:100vh;display:grid;place-items:center}.boot-card{border:1px solid #30363d;border-radius:18px;padding:28px 34px;background:#161b22;box-shadow:0 18px 70px #0008;text-align:center}.mark{color:#f97316;font-size:28px;font-weight:800}.muted{color:#8b949e;margin-top:8px}.err{max-width:720px;text-align:left;white-space:pre-wrap;color:#ffb4a8}
+html,body{margin:0;min-height:100%;background:#0d1117;color:#e6edf3;font-family:Inter,Segoe UI,Arial,sans-serif}.boot{min-height:100vh;display:grid;place-items:center;padding:24px;box-sizing:border-box}.boot-card{border:1px solid #30363d;border-radius:18px;padding:28px 34px;background:#161b22;box-shadow:0 18px 70px #0008;text-align:center;max-width:760px}.mark{color:#f97316;font-size:28px;font-weight:800}.muted{color:#8b949e;margin-top:8px}.err{text-align:left;white-space:pre-wrap;color:#ffb4a8;overflow-wrap:anywhere}
 </style>
 <script src="itcv-seed-meta-1.js"></script>
 <script src="itcv-seed-meta-2.js"></script>
@@ -17,9 +17,17 @@ html,body{margin:0;min-height:100%;background:#0d1117;color:#e6edf3;font-family:
 <body><div class="boot"><div class="boot-card"><div class="mark">ITCertVault</div><div class="muted">Loading your certification vault…</div></div></div>
 <script>
 (async()=>{
+  const escapeHtml=(value)=>String(value==null?'':value).replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
+  const showError=(title,detail)=>{
+    try{
+      document.body.innerHTML='<div class="boot"><div class="boot-card err"><div class="mark">ITCertVault</div><h2>'+escapeHtml(title||'Site load error')+'</h2><div>'+escapeHtml(detail||'Unknown startup error')+'</div><p class="muted">Refresh once. If this message remains, send a screenshot of it so the exact startup failure can be fixed.</p></div></div>';
+    }catch(_e){}
+  };
+
   try{
     async function decodeSeed(b64){
       const bytes=Uint8Array.from(atob(b64),c=>c.charCodeAt(0));
+      if(typeof DecompressionStream!=='function') throw new Error('This browser does not support the required gzip decoder.');
       const stream=new Blob([bytes]).stream().pipeThrough(new DecompressionStream('gzip'));
       return JSON.parse(await new Response(stream).text());
     }
@@ -29,13 +37,14 @@ html,body{margin:0;min-height:100%;background:#0d1117;color:#e6edf3;font-family:
     const appBase=new URL('.',window.location.href);
     const assetPrefix=appBase.pathname.endsWith('/')?appBase.pathname:appBase.pathname+'/';
     const [baseR,meta]=await Promise.all([
-      fetch(new URL('base.html',appBase),{cache:'no-cache'}),
+      fetch(new URL('base.html',appBase),{cache:'no-store'}),
       decodeSeed(window.ITCV_META_B64)
     ]);
     const domains={},videos={};
 
     if(!baseR.ok) throw new Error('Could not load the ITCertVault base site ('+baseR.status+').');
     const base=await baseR.text();
+    if(!base||base.length<1000) throw new Error('The ITCertVault base site was empty or incomplete.');
     let html=base.replace(/CertForge/g,'ITCertVault');
 
     html=html.replace(/(["'])assets\//g,(m,q)=>q+assetPrefix+'assets/');
@@ -44,7 +53,8 @@ html,body{margin:0;min-height:100%;background:#0d1117;color:#e6edf3;font-family:
     const orangeIcon="<link rel=\"icon\" href=\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cpath fill='%23f97316' d='M32 3 55 12v17c0 15-9.8 26.2-23 32C18.8 55.2 9 44 9 29V12L32 3Z'/%3E%3Cpath fill='none' stroke='white' stroke-width='5' d='m21 31 7 7 15-16'/%3E%3C/svg%3E\">";
     html=html.replace(/<head>/i,'<head>'+orangeIcon+'<meta name="theme-color" content="#f97316">');
 
-    const runtimeTags='<script>window.ITCV_META='+JSON.stringify(meta)+';window.ITCV_DOMAINS='+JSON.stringify(domains)+';window.ITCV_VIDEOS='+JSON.stringify(videos)+';<\/script>'+[1,2,3,4].map(i=>'<script src="'+assetPrefix+'itcv-runtime-'+i+'.js"><\/script>').join('')+'<script>Function(window.ITCV_RUNTIME_SRC||"")();<\/script>';
+    const startupGuard='<script>(function(){window.ITCV_SHOW_STARTUP_ERROR=function(message){try{var hasVisible=false;document.querySelectorAll("header,main,nav,section,article,h1,h2,button,a").forEach(function(el){if(hasVisible)return;var r=el.getBoundingClientRect(),s=getComputedStyle(el);if(r.width>20&&r.height>10&&s.display!=="none"&&s.visibility!=="hidden"&&s.opacity!=="0")hasVisible=true;});if(hasVisible)return;document.body.innerHTML="<div style=\\"min-height:100vh;display:grid;place-items:center;padding:24px;background:#0d1117;color:#e6edf3;font-family:Arial,sans-serif;box-sizing:border-box\\"><div style=\\"max-width:760px;border:1px solid #30363d;border-radius:18px;padding:28px;background:#161b22\\"><h1 style=\\"color:#f97316\\">ITCertVault startup error</h1><pre style=\\"white-space:pre-wrap;overflow-wrap:anywhere;color:#ffb4a8\\"></pre></div></div>";document.querySelector("pre").textContent=String(message||"The application did not render.");}catch(e){}};window.addEventListener("error",function(e){setTimeout(function(){window.ITCV_SHOW_STARTUP_ERROR((e.error&&e.error.stack)||e.message||"JavaScript startup error");},0);});window.addEventListener("unhandledrejection",function(e){setTimeout(function(){window.ITCV_SHOW_STARTUP_ERROR((e.reason&&e.reason.stack)||e.reason||"Unhandled startup rejection");},0);});setTimeout(function(){window.ITCV_SHOW_STARTUP_ERROR("The application loaded but did not render visible content within 10 seconds.");},10000);})();<\/script>';
+    const runtimeTags=startupGuard+'<script>window.ITCV_META='+JSON.stringify(meta)+';window.CERT_META=window.ITCV_META;window.ITCV_DOMAINS='+JSON.stringify(domains)+';window.ITCV_VIDEOS='+JSON.stringify(videos)+';window.CERT_DOMAINS=window.CERT_DOMAINS||{};window.CERT_VIDEOS=window.CERT_VIDEOS||{};<\/script>'+[1,2,3,4].map(i=>'<script src="'+assetPrefix+'itcv-runtime-'+i+'.js"><\/script>').join('')+'<script>try{Function(window.ITCV_RUNTIME_SRC||"")();}catch(e){console.error("[ITCertVault] runtime bootstrap failed; continuing with base metadata",e);window.CERT_META=window.CERT_META||window.ITCV_META||[];window.CERT_DOMAINS=window.CERT_DOMAINS||{};window.CERT_VIDEOS=window.CERT_VIDEOS||{};}<\/script>'+'<script src="'+assetPrefix+'itcv-ui-fix.js"><\/script>';
     const marker='var META=window.CERT_META';
     const mp=html.indexOf(marker);
     if(mp<0) throw new Error('The ITCertVault base application marker was not found.');
@@ -54,7 +64,7 @@ html,body{margin:0;min-height:100%;background:#0d1117;color:#e6edf3;font-family:
     html=html.slice(0,sp)+runtimeTags+html.slice(sp);
     document.open();document.write(html);document.close();
   }catch(e){
-    document.body.innerHTML='<div class="boot"><div class="boot-card err"><div class="mark">ITCertVault</div><h2>Site load error</h2><div>'+String(e&&e.message||e)+'</div></div></div>';
+    showError('Site load error',(e&&e.stack)||String(e&&e.message||e));
   }
 })();
 </script></body></html>
