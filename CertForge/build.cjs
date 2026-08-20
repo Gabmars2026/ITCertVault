@@ -27,9 +27,25 @@ if (!fs.existsSync(basePath)) throw new Error('base.html was not found in CertFo
 let html = fs.readFileSync(basePath, 'utf8');
 
 const seedContext = { window: {} };
-for (let i = 1; i <= 4; i++) {
-  const seedPath = path.join(root, `itcv-seed-meta-${i}.js`);
-  if (!fs.existsSync(seedPath)) throw new Error(`Missing ${path.basename(seedPath)}`);
+const seedFiles = [
+  'itcv-meta-fixed-1.js',
+  'itcv-meta-fixed-2.js',
+  'itcv-meta-fixed-3a.js',
+  'itcv-meta-fixed-3b.js',
+  'itcv-meta-fixed-4a.js',
+  'itcv-meta-fixed-4b.js',
+  'itcv-meta-fixed-5a.js',
+  'itcv-meta-fixed-5b.js',
+  'itcv-meta-fixed-6a.js',
+  'itcv-meta-fixed-6b.js',
+  'itcv-meta-fixed-7a.js',
+  'itcv-meta-fixed-7b.js',
+  'itcv-meta-fixed-8a.js',
+  'itcv-meta-fixed-8b.js'
+];
+for (const seedFile of seedFiles) {
+  const seedPath = path.join(root, seedFile);
+  if (!fs.existsSync(seedPath)) throw new Error(`Missing ${seedFile}`);
   vm.runInNewContext(fs.readFileSync(seedPath, 'utf8'), seedContext, { filename: seedPath });
 }
 const b64 = seedContext.window.ITCV_META_B64 || '';
