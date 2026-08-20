@@ -45,9 +45,9 @@ html = html.replace(/<head>/i, '<head>' + orangeIcon + '<meta name="theme-color"
 
 const safeMeta = JSON.stringify(meta).replace(/</g, '\\u003c');
 const runtimeTags =
-  '<script>window.ITCV_META=' + safeMeta + ';window.ITCV_DOMAINS={};window.ITCV_VIDEOS={};<\\/script>' +
-  [1, 2, 3, 4].map(i => '<script src="./itcv-runtime-' + i + '.js"><\\/script>').join('') +
-  '<script>Function(window.ITCV_RUNTIME_SRC||"")();<\\/script>';
+  '<script>window.ITCV_META=' + safeMeta + ';window.ITCV_DOMAINS={};window.ITCV_VIDEOS={};</script>' +
+  [1, 2, 3, 4].map(i => '<script src="./itcv-runtime-' + i + '.js"></script>').join('') +
+  '<script>Function(window.ITCV_RUNTIME_SRC||"")();</script>';
 
 const marker = 'var META=window.CERT_META';
 const markerPos = html.indexOf(marker);
