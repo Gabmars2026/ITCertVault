@@ -58,6 +58,17 @@ const orangeIcon = "<link rel=\"icon\" href=\"data:image/svg+xml,%3Csvg xmlns='h
 html = html.replace(/<head>/i, '<head>' + orangeIcon + '<meta name="theme-color" content="#f97316">');
 
 const safeMeta = JSON.stringify(meta).replace(/</g, '\\u003c');
+
+// The packaged runtime contains an old whole-page branding MutationObserver.
+// Remove it before executing the runtime so startup cannot get trapped in a
+// DOM mutation loop. Keep the title replacement idempotent as well.
+const runtimePatch = "document.title=(document.title||'ITCertVault').replace(/CertForge/g,'ITCertVault');";
+const runtimePatchFixed = "var nextTitle=(document.title||'ITCertVault').replace(/CertForge/g,'ITCertVault');if(document.title!==nextTitle)document.title=nextTitle;";
+const observerPatch = "new MutationObserver(function(m){m.forEach(function(x){x.addedNodes.forEach(function(n){if(n.nodeType===1||n.nodeType===3)cleanBrand(n.nodeType===1?n:n.parentNode);});});}).observe(document.documentElement,{childList:true,subtree:true});";
+
+// Repair certification-image sizing without running a continuous DOM observer.
+// The scan runs at startup and again after user interaction, which is enough for
+// dynamically rendered certification cards without keeping the page perpetually busy.
 const visualLayoutFix = String.raw`(function(){
 'use strict';
 var STYLE_ID='itcv-visual-layout-fix';
@@ -73,30 +84,43 @@ function mark(control){
   if(!control||!control.classList||!isFullSize(control))return;
   control.classList.add('itcv-fullsize-control');
   var immediate=control.parentElement;
-  if(immediate&&!immediate.querySelector('img,svg'))immediate.classList.add('itcv-fullsize-control-wrap');
+  if(immediate&&!immediate.querySelector('img'))immediate.classList.add('itcv-fullsize-control-wrap');
   var node=immediate,card=null;
-  for(var i=0;i<7&&node&&node!==document.body;i++,node=node.parentElement){if(node.querySelector&&node.querySelector('img,svg')){card=node;break;}}
+  for(var i=0;i<7&&node&&node!==document.body;i++,node=node.parentElement){
+    if(node.querySelector&&node.querySelector('img')){card=node;break;}
+  }
   if(!card)return;
   card.classList.add('itcv-visual-card-fixed');
-  card.querySelectorAll('img,svg').forEach(function(media){media.classList.add('itcv-visual-media-fixed');var shell=media.parentElement;if(shell&&shell!==card)shell.classList.add('itcv-visual-media-shell-fixed');});
+  card.querySelectorAll('img').forEach(function(media){
+    media.classList.add('itcv-visual-media-fixed');
+    var shell=media.parentElement;
+    if(shell&&shell!==card)shell.classList.add('itcv-visual-media-shell-fixed');
+  });
 }
-function scan(root){
-  if(!root)return;
+function run(){
   installStyles();
-  if(root.nodeType===1&&root.matches&&root.matches('button,a,[role="button"]'))mark(root);
-  if(root.querySelectorAll)root.querySelectorAll('button,a,[role="button"]').forEach(mark);
+  var root=document.body||document.documentElement;
+  if(!root||!root.querySelectorAll)return;
+  root.querySelectorAll('button,a,[role="button"]').forEach(mark);
 }
-function run(){scan(document.body||document.documentElement);}
+function startup(){
+  run();
+  setTimeout(run,250);
+  setTimeout(run,1000);
+}
 installStyles();
-if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',run,{once:true});else run();
-var queued=false;
-new MutationObserver(function(records){if(queued)return;var changed=records.some(function(r){return r.addedNodes&&r.addedNodes.length;});if(!changed)return;queued=true;requestAnimationFrame(function(){queued=false;run();});}).observe(document.documentElement,{childList:true,subtree:true});
+if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',startup,{once:true});else startup();
+var clickTimer=0;
+document.addEventListener('click',function(){
+  clearTimeout(clickTimer);
+  clickTimer=setTimeout(run,120);
+},true);
 })();`;
 
 const runtimeTags =
   '<script>window.ITCV_META=' + safeMeta + ';window.ITCV_DOMAINS={};window.ITCV_VIDEOS={};</script>' +
   [1, 2, 3, 4].map(i => '<script src="./itcv-runtime-' + i + '.js"></script>').join('') +
-  '<script>Function(window.ITCV_RUNTIME_SRC||"")();</script>' +
+  '<script>window.ITCV_RUNTIME_SRC=(window.ITCV_RUNTIME_SRC||"").replace(' + JSON.stringify(runtimePatch) + ',' + JSON.stringify(runtimePatchFixed) + ').replace(' + JSON.stringify(observerPatch) + ',"");Function(window.ITCV_RUNTIME_SRC||"")();</script>' +
   '<script>' + visualLayoutFix.replace(/<\/script/gi, '<\\/script') + '</script>';
 
 const marker = 'var META=window.CERT_META';
