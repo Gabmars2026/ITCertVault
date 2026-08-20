@@ -1,0 +1,34 @@
+name: Prepare Vercel Root Directory
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  prepare:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Mirror site into CertForge root
+        shell: bash
+        run: |
+          mkdir -p CertForge
+          for f in index.html base.html itcv-runtime-1.js itcv-runtime-2.js itcv-runtime-3.js itcv-runtime-4.js itcv-seed-meta-1.js itcv-seed-meta-2.js itcv-seed-meta-3.js itcv-seed-meta-4.js nav-v53.js; do
+            if [ -f "$f" ]; then cp -f "$f" "CertForge/$f"; fi
+          done
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add CertForge
+          if git diff --cached --quiet; then
+            echo "CertForge directory is already current."
+          else
+            git commit -m "Prepare site for Vercel CertForge root"
+            git push origin main
+          fi
