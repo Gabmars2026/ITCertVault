@@ -26,13 +26,28 @@ const basePath = path.join(root, 'base.html');
 if (!fs.existsSync(basePath)) throw new Error('base.html was not found in the Vercel project root.');
 let html = fs.readFileSync(basePath, 'utf8');
 
-// Build the certification metadata on Vercel at build time. This removes the
-// browser-side fetch/decompression/document.write startup sequence that could
-// leave the page showing only its dark background.
+// Use the repository's verified metadata chunks. These are the known-good
+// gzip stream previously prepared for the Vercel production build.
 const seedContext = { window: {} };
-for (let i = 1; i <= 4; i++) {
-  const seedPath = path.join(root, `itcv-seed-meta-${i}.js`);
-  if (!fs.existsSync(seedPath)) throw new Error(`Missing ${path.basename(seedPath)}`);
+const seedFiles = [
+  'itcv-meta-fixed-1.js',
+  'itcv-meta-fixed-2.js',
+  'itcv-meta-fixed-3a.js',
+  'itcv-meta-fixed-3b.js',
+  'itcv-meta-fixed-4a.js',
+  'itcv-meta-fixed-4b.js',
+  'itcv-meta-fixed-5a.js',
+  'itcv-meta-fixed-5b.js',
+  'itcv-meta-fixed-6a.js',
+  'itcv-meta-fixed-6b.js',
+  'itcv-meta-fixed-7a.js',
+  'itcv-meta-fixed-7b.js',
+  'itcv-meta-fixed-8a.js',
+  'itcv-meta-fixed-8b.js'
+];
+for (const seedFile of seedFiles) {
+  const seedPath = path.join(root, seedFile);
+  if (!fs.existsSync(seedPath)) throw new Error(`Missing ${seedFile}`);
   vm.runInNewContext(fs.readFileSync(seedPath, 'utf8'), seedContext, { filename: seedPath });
 }
 
@@ -59,11 +74,10 @@ if (markerPos < 0) throw new Error('The ITCertVault base application marker was 
 const scriptPos = html.lastIndexOf('<script', markerPos);
 if (scriptPos < 0) throw new Error('The ITCertVault application script could not be located.');
 
+// Keep startup deliberately simple: data bootstrap + original application.
+// Do not execute the later split runtime patch files during initial render.
 html = html.slice(0, scriptPos) + bootstrap + html.slice(scriptPos);
 
-// If the legacy app itself throws before rendering, show the browser error on
-// screen instead of silently leaving a blank page. This does nothing when the
-// application starts normally.
 const diagnostic = `<script>
 window.addEventListener('error',function(e){
   setTimeout(function(){
@@ -71,6 +85,16 @@ window.addEventListener('error',function(e){
       var box=document.createElement('div');
       box.style.cssText='position:fixed;inset:24px;z-index:2147483647;padding:24px;background:#161b22;color:#ffb4a8;border:1px solid #f97316;border-radius:16px;font:16px/1.5 Arial,sans-serif;overflow:auto';
       box.innerHTML='<strong style="color:#f97316;font-size:22px">ITCertVault startup error</strong><br><br>'+String((e&&e.message)||'Unknown browser error');
+      document.body.appendChild(box);
+    }
+  },100);
+});
+window.addEventListener('unhandledrejection',function(e){
+  setTimeout(function(){
+    if(document.body && !document.body.innerText.trim()){
+      var box=document.createElement('div');
+      box.style.cssText='position:fixed;inset:24px;z-index:2147483647;padding:24px;background:#161b22;color:#ffb4a8;border:1px solid #f97316;border-radius:16px;font:16px/1.5 Arial,sans-serif;overflow:auto';
+      box.innerHTML='<strong style="color:#f97316;font-size:22px">ITCertVault startup error</strong><br><br>'+String((e&&e.reason)||'Unhandled startup rejection');
       document.body.appendChild(box);
     }
   },100);
