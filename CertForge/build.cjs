@@ -114,7 +114,10 @@ const safeMeta = JSON.stringify(meta).replace(/</g, '\\u003c');
 const bootstrap =
   '<script>' +
   'window.ITCV_META=' + safeMeta + ';' +
-  'window.CERT_META=window.ITCV_META;' +
+  // CERT_META is intentionally a copy. Historical startup code appends legacy
+  // entries to CERT_META; sharing the same array here would also mutate the
+  // authoritative ITCV_META seed from 332 to 458 before the final reset.
+  'window.CERT_META=window.ITCV_META.slice();' +
   'window.ITCV_DOMAINS=window.ITCV_DOMAINS||{};' +
   'window.ITCV_VIDEOS=window.ITCV_VIDEOS||{};' +
   'window.CERT_DOMAINS=window.CERT_DOMAINS||window.ITCV_DOMAINS;' +
@@ -140,6 +143,16 @@ html = html.slice(0, markerPos) + finalCatalogReset + html.slice(markerPos);
 
 // Keep startup simple: verified data bootstrap + original application.
 html = html.slice(0, scriptPos) + bootstrap + html.slice(scriptPos);
+
+// Production invariant: the authoritative seed and mutable working catalog
+// must never share the same array reference.
+if (html.includes('window.CERT_META=window.ITCV_META;')) {
+  throw new Error('Unsafe shared CERT_META/ITCV_META array alias remains in the generated production page.');
+}
+if ((html.split('window.CERT_META=window.ITCV_META.slice();').length - 1) < 2) {
+  throw new Error('The generated production page is missing the isolated 332-cert catalog bootstrap/reset.');
+}
+console.log('Verified catalog isolation: legacy CERT_META appends cannot mutate ITCV_META.');
 
 // Apply the existing visual fix in production. It prevents image cropping,
 // keeps the complete image/text visible, and places the "View full size"
