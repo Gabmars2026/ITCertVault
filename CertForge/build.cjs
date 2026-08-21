@@ -123,7 +123,8 @@ while ((match = inlineScriptRe.exec(html)) !== null) {
   try {
     new vm.Script(source, { filename: `inline-script-${checkedScripts + 1}.js` });
   } catch (err) {
-    throw new Error(`Invalid inline browser JavaScript in generated ITCertVault page: ${err.message}`);
+    const details = String((err && err.stack) || err);
+    throw new Error(`Invalid inline browser JavaScript in generated ITCertVault page, script ${checkedScripts + 1}:\n${details}`);
   }
   checkedScripts++;
 }
