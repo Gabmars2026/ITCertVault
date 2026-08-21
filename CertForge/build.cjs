@@ -26,6 +26,27 @@ const basePath = path.join(root, 'base.html');
 if (!fs.existsSync(basePath)) throw new Error('base.html was not found in the ITCertVault project root.');
 let html = fs.readFileSync(basePath, 'utf8');
 
+// The imported base file contains one historical chunk-assembly corruption:
+// a duplicated section of the document was spliced into the middle of the
+// promptLine() return object, followed by a premature </html>, while the real
+// continuation was appended immediately afterwards. Remove only that exact
+// malformed span and reconnect the function. The strict markers make this
+// repair fail closed instead of changing unrelated page content.
+const promptPrefix = "return {kind:'prompt',user:'',host:shell==='windows'?'PS':";
+const duplicatedStart = "', DATA=window.CERT_DATA";
+const promptResume = ",cwd:shell==='windows'?'>':'',cmd:cmd};";
+const promptAt = html.indexOf(promptPrefix);
+if (promptAt >= 0) {
+  const cutStart = promptAt + promptPrefix.length;
+  const resumeAt = html.indexOf(promptResume, cutStart);
+  const between = resumeAt > cutStart ? html.slice(cutStart, resumeAt) : '';
+  if (!between.startsWith(duplicatedStart) || !between.includes('</html>')) {
+    throw new Error('The known ITCertVault base-file splice did not match the expected safe repair pattern.');
+  }
+  html = html.slice(0, cutStart) + "''" + html.slice(resumeAt);
+  console.log(`Repaired historical duplicated base-file splice (${between.length.toLocaleString()} characters removed).`);
+}
+
 // Use the repository's verified 332-certification metadata chunks.
 const seedContext = { window: {} };
 const seedFiles = [
