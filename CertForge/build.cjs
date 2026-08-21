@@ -54,10 +54,9 @@ const b64 = seedContext.window.ITCV_META_B64 || '';
 if (!b64) throw new Error('Certification metadata seed is empty.');
 const meta = JSON.parse(zlib.gunzipSync(Buffer.from(b64, 'base64')).toString('utf8'));
 
-// Rename all visible legacy CertForge branding to ITCertVault in production.
-html = html.replace(/CertForge/g, 'ITCertVault');
-html = html.replace(/certforge/g, 'itcertvault');
-
+// base.html already contains the approved ITCertVault branding. Do not run
+// whole-document string replacements here because the page includes inline
+// application JavaScript and data that must remain byte-for-byte valid.
 const safeMeta = JSON.stringify(meta).replace(/</g, '\\u003c');
 const bootstrap =
   '<script>' +
