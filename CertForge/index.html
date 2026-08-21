@@ -17,7 +17,7 @@ html,body{margin:0;min-height:100%;background:#0d1117;color:#e6edf3;font-family:
 <body><div class="boot"><div class="boot-card"><div class="mark">ITCertVault</div><div class="muted">Loading your certification vault…</div></div></div>
 <script>
 (async()=>{
-  const escapeHtml=(value)=>String(value==null?'':value).replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot',"'":'&#39;'}[ch]));
+  const escapeHtml=(value)=>String(value==null?'':value).replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
   const showError=(title,detail)=>{
     try{
       document.body.innerHTML='<div class="boot"><div class="boot-card err"><div class="mark">ITCertVault</div><h2>'+escapeHtml(title||'Site load error')+'</h2><div>'+escapeHtml(detail||'Unknown startup error')+'</div><p class="muted">Refresh once. If this message remains, send a screenshot of it so the exact startup failure can be fixed.</p></div></div>';
