@@ -47,6 +47,18 @@ html,body{margin:0;min-height:100%;background:#0d1117;color:#e6edf3;font-family:
     if(!base||base.length<1000) throw new Error('The ITCertVault base site was empty or incomplete.');
     let html=base.replace(/CertForge/g,'ITCertVault');
 
+    // base.html still contains a legacy /data/<version>/ JSON manifest. Those
+    // files are no longer deployed, so allowing the old app to see that
+    // manifest makes every study route fail with "Could not load study content".
+    // Remove the manifest from the HTML string before document.write executes
+    // any of the base application's scripts. The 332-cert runtime below is the
+    // authoritative source of books, questions, labs, images and video links.
+    const legacyBlobPattern=/window\.CF_BLOB=\{version:"[^"]+",base:'\/data\/',manifest:\{[^\n]*\}\};/g;
+    const legacyBlobCount=(html.match(/window\.CF_BLOB=\{version:/g)||[]).length;
+    html=html.replace(legacyBlobPattern,'window.CF_BLOB={version:"local-runtime",base:"",manifest:{}};');
+    const remainingLegacyBlobs=(html.match(/window\.CF_BLOB=\{version:"v-/g)||[]).length;
+    if(legacyBlobCount&&remainingLegacyBlobs) throw new Error('The obsolete ITCertVault study-data manifest could not be removed.');
+
     html=html.replace(/(["'])assets\//g,(m,q)=>q+assetPrefix+'assets/');
     html=html.replace(/(<script\s+[^>]*src=["'])(?!https?:|\/|data:|blob:)([^"']+)(["'])/gi,(m,a,src,q)=>a+assetPrefix+src+q);
 
@@ -54,7 +66,7 @@ html,body{margin:0;min-height:100%;background:#0d1117;color:#e6edf3;font-family:
     html=html.replace(/<head>/i,'<head>'+orangeIcon+'<meta name="theme-color" content="#f97316">');
 
     const startupGuard='<script>(function(){window.ITCV_SHOW_STARTUP_ERROR=function(message){try{var hasVisible=false;document.querySelectorAll("header,main,nav,section,article,h1,h2,button,a").forEach(function(el){if(hasVisible)return;var r=el.getBoundingClientRect(),s=getComputedStyle(el);if(r.width>20&&r.height>10&&s.display!=="none"&&s.visibility!=="hidden"&&s.opacity!=="0")hasVisible=true;});if(hasVisible)return;document.body.innerHTML="<div style=\\"min-height:100vh;display:grid;place-items:center;padding:24px;background:#0d1117;color:#e6edf3;font-family:Arial,sans-serif;box-sizing:border-box\\"><div style=\\"max-width:760px;border:1px solid #30363d;border-radius:18px;padding:28px;background:#161b22\\"><h1 style=\\"color:#f97316\\">ITCertVault startup error</h1><pre style=\\"white-space:pre-wrap;overflow-wrap:anywhere;color:#ffb4a8\\"></pre></div></div>";document.querySelector("pre").textContent=String(message||"The application did not render.");}catch(e){}};window.addEventListener("error",function(e){setTimeout(function(){window.ITCV_SHOW_STARTUP_ERROR((e.error&&e.error.stack)||e.message||"JavaScript startup error");},0);});window.addEventListener("unhandledrejection",function(e){setTimeout(function(){window.ITCV_SHOW_STARTUP_ERROR((e.reason&&e.reason.stack)||e.reason||"Unhandled startup rejection");},0);});setTimeout(function(){window.ITCV_SHOW_STARTUP_ERROR("The application loaded but did not render visible content within 10 seconds.");},10000);})();<\/script>';
-    const runtimeTags=startupGuard+'<script>window.ITCV_META='+JSON.stringify(meta)+';window.CERT_META=window.ITCV_META;window.ITCV_DOMAINS='+JSON.stringify(domains)+';window.ITCV_VIDEOS='+JSON.stringify(videos)+';window.CERT_DOMAINS=window.CERT_DOMAINS||{};window.CERT_VIDEOS=window.CERT_VIDEOS||{};<\/script>'+[1,2,3,4].map(i=>'<script src="'+assetPrefix+'itcv-runtime-'+i+'.js"><\/script>').join('')+'<script>try{Function(window.ITCV_RUNTIME_SRC||"")();}catch(e){console.error("[ITCertVault] runtime bootstrap failed; continuing with base metadata",e);window.CERT_META=window.CERT_META||window.ITCV_META||[];window.CERT_DOMAINS=window.CERT_DOMAINS||{};window.CERT_VIDEOS=window.CERT_VIDEOS||{};}<\/script>'+'<script src="'+assetPrefix+'itcv-ui-fix.js"><\/script>';
+    const runtimeTags=startupGuard+'<script>window.ITCV_META='+JSON.stringify(meta)+';window.CERT_META=window.ITCV_META;window.ITCV_DOMAINS='+JSON.stringify(domains)+';window.ITCV_VIDEOS='+JSON.stringify(videos)+';window.CERT_DOMAINS=window.CERT_DOMAINS||{};window.CERT_VIDEOS=window.CERT_VIDEOS||{};window.ITCV_LEGACY_BLOB_COUNT='+legacyBlobCount+';<\/script>'+[1,2,3,4].map(i=>'<script src="'+assetPrefix+'itcv-runtime-'+i+'.js"><\/script>').join('')+'<script>try{Function(window.ITCV_RUNTIME_SRC||"")();}catch(e){console.error("[ITCertVault] runtime bootstrap failed; continuing with base metadata",e);window.CERT_META=window.CERT_META||window.ITCV_META||[];window.CERT_DOMAINS=window.CERT_DOMAINS||{};window.CERT_VIDEOS=window.CERT_VIDEOS||{};}<\/script>'+'<script src="'+assetPrefix+'itcv-ui-fix.js"><\/script>';
     const marker='var META=window.CERT_META';
     const mp=html.indexOf(marker);
     if(mp<0) throw new Error('The ITCertVault base application marker was not found.');
