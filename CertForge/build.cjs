@@ -26,24 +26,15 @@ const basePath = path.join(root, 'base.html');
 if (!fs.existsSync(basePath)) throw new Error('base.html was not found in the Vercel project root.');
 let html = fs.readFileSync(basePath, 'utf8');
 
-// Use the repository's verified metadata chunks. These are the known-good
-// gzip stream previously prepared for the Vercel production build.
+// Verify the original imported ITCertVault certification dataset before
+// allowing this branch to deploy. Production should only be switched if
+// this exact dataset contains the expected 332 certification tracks.
 const seedContext = { window: {} };
 const seedFiles = [
-  'itcv-meta-fixed-1.js',
-  'itcv-meta-fixed-2.js',
-  'itcv-meta-fixed-3a.js',
-  'itcv-meta-fixed-3b.js',
-  'itcv-meta-fixed-4a.js',
-  'itcv-meta-fixed-4b.js',
-  'itcv-meta-fixed-5a.js',
-  'itcv-meta-fixed-5b.js',
-  'itcv-meta-fixed-6a.js',
-  'itcv-meta-fixed-6b.js',
-  'itcv-meta-fixed-7a.js',
-  'itcv-meta-fixed-7b.js',
-  'itcv-meta-fixed-8a.js',
-  'itcv-meta-fixed-8b.js'
+  'itcv-seed-meta-1.js',
+  'itcv-seed-meta-2.js',
+  'itcv-seed-meta-3.js',
+  'itcv-seed-meta-4.js'
 ];
 for (const seedFile of seedFiles) {
   const seedPath = path.join(root, seedFile);
@@ -54,6 +45,10 @@ for (const seedFile of seedFiles) {
 const b64 = seedContext.window.ITCV_META_B64 || '';
 if (!b64) throw new Error('Certification metadata seed is empty.');
 const meta = JSON.parse(zlib.gunzipSync(Buffer.from(b64, 'base64')).toString('utf8'));
+console.log(`Verified imported certification dataset: ${meta.length} certifications.`);
+if (!Array.isArray(meta) || meta.length !== 332) {
+  throw new Error(`Expected 332 certifications, but imported dataset contains ${Array.isArray(meta) ? meta.length : 'invalid'} certifications.`);
+}
 
 html = html.replace(/CertForge/g, 'ITCertVault');
 
@@ -74,8 +69,6 @@ if (markerPos < 0) throw new Error('The ITCertVault base application marker was 
 const scriptPos = html.lastIndexOf('<script', markerPos);
 if (scriptPos < 0) throw new Error('The ITCertVault application script could not be located.');
 
-// Keep startup deliberately simple: data bootstrap + original application.
-// Do not execute the later split runtime patch files during initial render.
 html = html.slice(0, scriptPos) + bootstrap + html.slice(scriptPos);
 
 const diagnostic = `<script>
