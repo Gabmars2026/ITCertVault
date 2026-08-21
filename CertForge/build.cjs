@@ -108,5 +108,27 @@ window.addEventListener('unhandledrejection',function(e){
 </script>`;
 html = html.replace(/<body([^>]*)>/i, '<body$1>' + diagnostic);
 
+// Prevent a production deploy if any classic inline browser script has invalid
+// JavaScript syntax. This catches the exact class of error that previously
+// produced "Uncaught SyntaxError: Invalid or unexpected token" in the browser.
+let checkedScripts = 0;
+const inlineScriptRe = /<script\b([^>]*)>([\s\S]*?)<\/script>/gi;
+let match;
+while ((match = inlineScriptRe.exec(html)) !== null) {
+  const attrs = match[1] || '';
+  const source = match[2] || '';
+  if (/\bsrc\s*=/.test(attrs)) continue;
+  const typeMatch = attrs.match(/\btype\s*=\s*["']([^"']+)["']/i);
+  if (typeMatch && !/^(?:text|application)\/javascript$/i.test(typeMatch[1])) continue;
+  try {
+    new vm.Script(source, { filename: `inline-script-${checkedScripts + 1}.js` });
+  } catch (err) {
+    throw new Error(`Invalid inline browser JavaScript in generated ITCertVault page: ${err.message}`);
+  }
+  checkedScripts++;
+}
+if (!checkedScripts) throw new Error('No inline browser JavaScript was found to validate.');
+
 fs.writeFileSync(path.join(out, 'index.html'), html, 'utf8');
+console.log(`Validated ${checkedScripts} inline browser script(s).`);
 console.log(`Built direct ITCertVault production page (${html.length.toLocaleString()} characters).`);
