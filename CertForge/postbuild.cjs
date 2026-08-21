@@ -18,10 +18,8 @@ const shell = fs.readFileSync(shellPath, 'utf8');
 
 const requiredShellMarkers = [
   'base.html',
-  'itcv-runtime-1.js',
-  'itcv-runtime-2.js',
-  'itcv-runtime-3.js',
-  'itcv-runtime-4.js',
+  'itcv-runtime-',
+  '[1,2,3,4].map',
   'legacyBlobPattern',
   'document.write(html)'
 ];
@@ -31,10 +29,14 @@ for (const marker of requiredShellMarkers) {
   }
 }
 
-const runtime3Path = path.join(root, 'itcv-runtime-3.js');
-if (!fs.existsSync(runtime3Path)) {
-  throw new Error('postbuild: itcv-runtime-3.js is missing');
+for (let i = 1; i <= 4; i++) {
+  const runtimePath = path.join(root, `itcv-runtime-${i}.js`);
+  if (!fs.existsSync(runtimePath)) {
+    throw new Error(`postbuild: itcv-runtime-${i}.js is missing`);
+  }
 }
+
+const runtime3Path = path.join(root, 'itcv-runtime-3.js');
 const runtime3 = fs.readFileSync(runtime3Path, 'utf8');
 if (!runtime3.includes('function genVideos(id)') || !runtime3.includes('window.CERT_VIDEOS=lazy(window.CERT_VIDEOS,genVideos)')) {
   throw new Error('postbuild: certification video fallback runtime is missing');
