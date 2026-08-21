@@ -55,17 +55,17 @@
   }
 
   function fixCertificationCount(){
-    // The deployment build verifies ITCV_META is exactly 332. Keep public
-    // counters pinned to that authoritative catalog even when legacy shell
-    // scripts temporarily merge historical fallback entries at runtime.
+    // The production build verifies ITCV_META is exactly 332. Legacy shell
+    // code can still calculate an inflated historical union later, so every
+    // public certification counter is pinned to the verified catalog total.
     window.CERT_CATALOG_COUNT=EXPECTED_CERTIFICATION_COUNT;
     window.CERT_CERTIFICATION_COUNT=EXPECTED_CERTIFICATION_COUNT;
 
     var nav=document.querySelector('[data-nav]');
     if(nav) nav.dataset.itcvCertCount=String(EXPECTED_CERTIFICATION_COUNT);
 
-    document.querySelectorAll('.side-label,h1,h2,h3,.phead,strong,span,div').forEach(function(el){
-      if(!el||el.children.length>8) return;
+    document.querySelectorAll('.side-label,h1,h2,h3,.phead,strong,span').forEach(function(el){
+      if(!el) return;
       var text=(el.textContent||'').replace(/\s+/g,' ').trim();
       if(!text) return;
 
@@ -113,6 +113,5 @@
   }).observe(document.documentElement,{childList:true,subtree:true,characterData:true});
 
   // Legacy shell repairs run on delayed timers after initial page load.
-  // Re-assert the verified count after each of those startup windows.
   [100,350,900,1800,3500,5000].forEach(function(ms){setTimeout(fixCertificationCount,ms);});
 })();
