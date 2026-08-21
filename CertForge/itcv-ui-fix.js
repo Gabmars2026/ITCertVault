@@ -3,6 +3,7 @@
 
   var STYLE_ID='itcv-visual-layout-fix';
   var EXPECTED_CERTIFICATION_COUNT=332;
+  var catalogNormalized=false;
 
   function installStyles(){
     if(document.getElementById(STYLE_ID)) return;
@@ -45,6 +46,41 @@
     });
   }
 
+  function normalizeCatalog(){
+    if(catalogNormalized) return;
+    var authoritative=Array.isArray(window.ITCV_META)?window.ITCV_META:null;
+    if(!authoritative||authoritative.length!==EXPECTED_CERTIFICATION_COUNT) return;
+
+    // Final Shell V9 captures this legacy fallback array by reference before
+    // this file runs. Mutate that same array object in place so its delayed
+    // repairs can only merge the authoritative 332 entries, never the old
+    // historical fallback that produced 462.
+    var fallback=window.ITCV_FINAL_SHELL_V9_STATIC_META;
+    if(Array.isArray(fallback)){
+      fallback.splice(0,fallback.length);
+      authoritative.forEach(function(cert){fallback.push(Object.assign({},cert));});
+    }
+
+    window.CERT_META=authoritative.map(function(cert){return Object.assign({},cert);});
+    window.CERT_CATALOG_COUNT=EXPECTED_CERTIFICATION_COUNT;
+    window.CERT_CERTIFICATION_COUNT=EXPECTED_CERTIFICATION_COUNT;
+    catalogNormalized=true;
+
+    // Force the already-rendered legacy navigation to rebuild once from the
+    // corrected 332-entry catalog instead of keeping its earlier 462 nodes.
+    var nav=document.querySelector('[data-nav]');
+    if(nav){
+      delete nav.dataset.itcvFinalV9;
+      delete nav.dataset.itcvNavV7;
+      nav.dataset.itcvCertCount=String(EXPECTED_CERTIFICATION_COUNT);
+    }
+    try{
+      if(window.ITCV_FINAL_SHELL_V9&&typeof window.ITCV_FINAL_SHELL_V9.repair==='function'){
+        window.ITCV_FINAL_SHELL_V9.repair();
+      }
+    }catch(_){ }
+  }
+
   function certificationContext(el){
     var node=el;
     for(var depth=0;depth<4&&node&&node!==document.body;depth++,node=node.parentElement){
@@ -55,9 +91,7 @@
   }
 
   function fixCertificationCount(){
-    // The production build verifies ITCV_META is exactly 332. Legacy shell
-    // code can still calculate an inflated historical union later, so every
-    // public certification counter is pinned to the verified catalog total.
+    normalizeCatalog();
     window.CERT_CATALOG_COUNT=EXPECTED_CERTIFICATION_COUNT;
     window.CERT_CERTIFICATION_COUNT=EXPECTED_CERTIFICATION_COUNT;
 
@@ -112,6 +146,5 @@
     requestAnimationFrame(function(){queued=false;run();});
   }).observe(document.documentElement,{childList:true,subtree:true,characterData:true});
 
-  // Legacy shell repairs run on delayed timers after initial page load.
   [100,350,900,1800,3500,5000].forEach(function(ms){setTimeout(fixCertificationCount,ms);});
 })();
