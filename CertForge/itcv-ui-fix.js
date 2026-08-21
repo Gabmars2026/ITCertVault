@@ -10,10 +10,16 @@
   window.CF_MANIFEST={};
   document.documentElement.setAttribute('data-itcv-local-content','ready');
 
-  // Preserve the exact navigation/vendor and visual-layout fix that was
-  // previously served from this filename, and execute it synchronously before
-  // the base application continues parsing.
+  // Preserve and synchronously execute the exact navigation/vendor and
+  // visual-layout fix that previously lived at this filename.
   var current=document.currentScript;
   var coreSrc=(current&&current.src)?new URL('itcv-ui-fix-core.js',current.src).href:'itcv-ui-fix-core.js';
-  document.write('<script src="'+coreSrc.replace(/&/g,'&amp;')+'"><\\/script>');
+  var xhr=new XMLHttpRequest();
+  xhr.open('GET',coreSrc,false);
+  xhr.send(null);
+  if((xhr.status>=200&&xhr.status<300)||xhr.status===0){
+    Function(xhr.responseText)();
+  }else{
+    throw new Error('Could not load ITCertVault UI core ('+xhr.status+').');
+  }
 })();
