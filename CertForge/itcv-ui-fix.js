@@ -3,9 +3,19 @@
 
   var STYLE_ID='itcv-visual-layout-fix';
   var EXPECTED_CERTIFICATION_COUNT=332;
+  var COMPTIA_ORDER=[
+    'aplus','networkplus','securityplus','cysaplus','pentestplus','securityx',
+    'linuxplus','serverplus','cloudplus','cloudnetx','dataplus','datasysplus',
+    'projectplus','secai','dataai','autoops'
+  ];
 
   function clean(value){
     return String(value==null?'':value).replace(/\s+/g,' ').trim();
+  }
+
+  function comptiaRank(id){
+    var index=COMPTIA_ORDER.indexOf(String(id||''));
+    return index<0?999:index;
   }
 
   function vendorFromText(cert){
@@ -62,6 +72,24 @@
     return 'Independent / Multi-Vendor';
   }
 
+  function orderCompTIARecords(list){
+    if(!Array.isArray(list)) return;
+    var positions=[];
+    var certs=[];
+    list.forEach(function(cert,index){
+      if(cert&&vendorFromText(cert)==='CompTIA'){
+        positions.push(index);
+        certs.push(cert);
+      }
+    });
+    var original=certs.slice();
+    certs.sort(function(a,b){
+      var diff=comptiaRank(a&&a.id)-comptiaRank(b&&b.id);
+      return diff||original.indexOf(a)-original.indexOf(b);
+    });
+    positions.forEach(function(position,index){list[position]=certs[index];});
+  }
+
   function normalizeMetadata(){
     var authoritative=Array.isArray(window.ITCV_META)?window.ITCV_META:null;
     if(!authoritative||authoritative.length!==EXPECTED_CERTIFICATION_COUNT) return false;
@@ -73,6 +101,7 @@
       cert.vendor=vendor;
       cert.provider=vendor;
     });
+    orderCompTIARecords(authoritative);
 
     window.CERT_META=authoritative.map(function(cert){return Object.assign({},cert);});
     window.CERT_CATALOG_COUNT=EXPECTED_CERTIFICATION_COUNT;
@@ -135,6 +164,30 @@
     });
   }
 
+  function organizeCompTIANav(){
+    var nav=document.querySelector('[data-nav]');
+    if(!nav) return;
+    var section=null;
+    nav.querySelectorAll('section[data-provider-name]').forEach(function(candidate){
+      if(!section&&clean(candidate.getAttribute('data-provider-name')).toLowerCase()==='comptia') section=candidate;
+    });
+    if(!section) return;
+
+    var host=section.querySelector('.itcv-v7-provider-certs,.itcv-v9-provider-certs');
+    if(!host) return;
+    var rows=Array.from(host.querySelectorAll(':scope > .grp[data-grp]'));
+    if(rows.length<2) rows=Array.from(host.querySelectorAll('.grp[data-grp]'));
+    if(rows.length<2) return;
+
+    var original=rows.slice();
+    var desired=rows.slice().sort(function(a,b){
+      var diff=comptiaRank(a.getAttribute('data-grp'))-comptiaRank(b.getAttribute('data-grp'));
+      return diff||original.indexOf(a)-original.indexOf(b);
+    });
+    var changed=desired.some(function(row,index){return row!==rows[index];});
+    if(changed) desired.forEach(function(row){host.appendChild(row);});
+  }
+
   function fixCounters(){
     window.CERT_CATALOG_COUNT=EXPECTED_CERTIFICATION_COUNT;
     window.CERT_CERTIFICATION_COUNT=EXPECTED_CERTIFICATION_COUNT;
@@ -153,6 +206,7 @@
     if(!root) return;
     installStyles();
     fixCounters();
+    organizeCompTIANav();
     if(root.nodeType===1&&root.matches&&root.matches('button,a,[role="button"]')) markControl(root);
     if(root.querySelectorAll) root.querySelectorAll('button,a,[role="button"]').forEach(markControl);
   }
@@ -172,5 +226,5 @@
     requestAnimationFrame(function(){queued=false;run();});
   }).observe(document.documentElement,{childList:true,subtree:true});
 
-  [100,350,900,1800,3500].forEach(function(ms){setTimeout(fixCounters,ms);});
+  [100,350,900,1800,3500].forEach(function(ms){setTimeout(function(){fixCounters();organizeCompTIANav();},ms);});
 })();
