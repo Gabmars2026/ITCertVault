@@ -47,6 +47,30 @@ if (promptAt >= 0) {
   console.log(`Repaired historical duplicated base-file splice (${between.length.toLocaleString()} characters removed).`);
 }
 
+// base.html still contains several historical 50-cert expansion assertions.
+// They were correct when that expansion was the entire catalog, but they are
+// invalid once the verified 332-cert metadata is injected before the legacy
+// application script. Keep the expansion code/data for compatibility, but
+// turn only those obsolete hard failures into warnings. The authoritative
+// 332-cert list is restored immediately before the app captures CERT_META.
+const obsoleteCountAssertions = [
+  "if(window.CERT_META.length!==50)throw new Error('[ITCertVault] 2026 expansion expected 50 published certifications; found '+window.CERT_META.length);",
+  "if(window.CERT_META.length!==50)throw new Error('[CertForge] 2026 expansion expected 50 published certifications; found '+window.CERT_META.length);"
+];
+const obsoleteCountWarning = "if(window.CERT_META.length!==50)console.warn('[ITCertVault] ignored obsolete 50-cert expansion assertion; the verified 332-cert catalog will be restored before app capture.');";
+let retiredCountAssertions = 0;
+for (const assertion of obsoleteCountAssertions) {
+  const occurrences = html.split(assertion).length - 1;
+  if (occurrences > 0) {
+    html = html.split(assertion).join(obsoleteCountWarning);
+    retiredCountAssertions += occurrences;
+  }
+}
+if (!retiredCountAssertions) {
+  throw new Error('The obsolete 50-cert expansion assertion was not found; refusing to publish an unverified startup path.');
+}
+console.log(`Retired ${retiredCountAssertions} obsolete 50-cert startup assertion(s).`);
+
 // Use the repository's verified 332-certification metadata chunks.
 const seedContext = { window: {} };
 const seedFiles = [
@@ -74,6 +98,14 @@ for (const seedFile of seedFiles) {
 const b64 = seedContext.window.ITCV_META_B64 || '';
 if (!b64) throw new Error('Certification metadata seed is empty.');
 const meta = JSON.parse(zlib.gunzipSync(Buffer.from(b64, 'base64')).toString('utf8'));
+if (!Array.isArray(meta) || meta.length !== 332) {
+  throw new Error(`Verified ITCertVault catalog expected 332 certifications; found ${Array.isArray(meta) ? meta.length : 'invalid metadata'}.`);
+}
+const uniqueIds = new Set(meta.map((cert) => cert && cert.id).filter(Boolean));
+if (uniqueIds.size !== 332) {
+  throw new Error(`Verified ITCertVault catalog expected 332 unique certification IDs; found ${uniqueIds.size}.`);
+}
+console.log('Verified authoritative catalog: 332 certifications / 332 unique IDs.');
 
 // base.html already contains the approved ITCertVault branding. Do not run
 // whole-document string replacements here because the page includes inline
@@ -94,6 +126,17 @@ const markerPos = html.indexOf(marker);
 if (markerPos < 0) throw new Error('The ITCertVault base application marker was not found.');
 const scriptPos = html.lastIndexOf('<script', markerPos);
 if (scriptPos < 0) throw new Error('The ITCertVault application script could not be located.');
+
+// Legacy catalog builders run earlier in the same large browser script and can
+// temporarily append historical entries. Reset to the authoritative seed at
+// the exact point where the application captures its catalog so production is
+// exactly the requested 332 certifications, not 348 or another legacy total.
+const finalCatalogReset =
+  'window.CERT_META=window.ITCV_META.slice();' +
+  'window.CERT_CATALOG_COUNT=window.CERT_META.length;' +
+  'window.CERT_CERTIFICATION_COUNT=window.CERT_META.length;' +
+  'if(window.CERT_META.length!==332)throw new Error("[ITCertVault] verified catalog expected 332 certifications; found "+window.CERT_META.length);';
+html = html.slice(0, markerPos) + finalCatalogReset + html.slice(markerPos);
 
 // Keep startup simple: verified data bootstrap + original application.
 html = html.slice(0, scriptPos) + bootstrap + html.slice(scriptPos);
