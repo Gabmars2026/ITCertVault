@@ -31,22 +31,10 @@
     container.appendChild(frag);
   }
 
-  function sortBreakingRail(){
-    document.querySelectorAll('.panel.breaking').forEach(panel=>{
-      const items=[...panel.children].filter(n=>n.matches?.('.breakitem'));
-      if(items.length<2)return;
-      const ranked=items.map((item,index)=>({item,index,age:ageMinutes(item)}));
-      const sorted=[...ranked].sort((a,b)=>a.age-b.age||a.index-b.index);
-      if(!sorted.some((x,i)=>x.item!==items[i]))return;
-      const anchor=items[0];
-      sorted.forEach(x=>panel.insertBefore(x.item,anchor));
-    });
-  }
-
   function sortAll(){
     if(!latestModeAllowed())return;
     document.querySelectorAll(CONTAINERS).forEach(sortContainer);
-    sortBreakingRail();
+    /* Breaking rail is intentionally excluded. Its API already returns the rail in live priority/recency order. Moving .breakitem nodes here caused a MutationObserver reorder loop and thumbnail flicker. */
   }
 
   function schedule(delay=40){clearTimeout(timer);timer=setTimeout(sortAll,delay)}
@@ -61,7 +49,7 @@
       let relevant=false;
       for(const m of mutations){
         for(const n of m.addedNodes){
-          if(n.nodeType===1&&(n.matches?.('.card,.sectiongrid,.grid,.home-sectiongrid,.breakitem')||n.querySelector?.('.card,.breakitem'))){relevant=true;break}
+          if(n.nodeType===1&&(n.matches?.('.card,.sectiongrid,.grid,.home-sectiongrid')||n.querySelector?.('.card'))){relevant=true;break}
         }
         if(relevant)break;
       }
