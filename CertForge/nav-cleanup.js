@@ -1,4 +1,7 @@
 (()=>{
+  if(!document.querySelector('link[data-ain-mobile-nav-fix]')){
+    const l=document.createElement('link');l.rel='stylesheet';l.href='/mobile-nav-fix.css?v=20260827p';l.dataset.ainMobileNavFix='1';document.head.appendChild(l);
+  }
   const menus={
     SECURITY:[
       ['/cybersecurity/','Cybersecurity'],
