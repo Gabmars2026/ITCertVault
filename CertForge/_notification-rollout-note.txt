@@ -1,0 +1,1 @@
+All public page shells load /notifications.js so first-time visitors can opt in to live breaking technology alerts.
