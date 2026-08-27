@@ -14,34 +14,35 @@ const securityFeeds=[
   {source:'Ars Technica Security',url:'https://arstechnica.com/security/feed/'}
 ];
 const sysadminFeed={source:'r/sysadmin',url:'https://www.reddit.com/r/sysadmin/.rss'};
+const MAX_AGE_MS=15*24*60*60*1000;
 
 const queries={
-  home:'("technology" OR "artificial intelligence" OR cybersecurity OR semiconductor OR software OR hardware OR robotics OR "cloud computing" OR "data center" OR smartphone OR quantum) when:7d -stocks -stock -investing -investment -dividend',
-  'all-news':'("technology" OR "artificial intelligence" OR cybersecurity OR semiconductor OR software OR hardware OR robotics OR "cloud computing" OR "data center" OR smartphone OR quantum) when:7d -stocks -stock -investing -investment -dividend',
+  home:'("technology" OR "artificial intelligence" OR cybersecurity OR semiconductor OR software OR hardware OR robotics OR "cloud computing" OR "data center" OR smartphone OR quantum) when:15d -stocks -stock -investing -investment -dividend',
+  'all-news':'("technology" OR "artificial intelligence" OR cybersecurity OR semiconductor OR software OR hardware OR robotics OR "cloud computing" OR "data center" OR smartphone OR quantum) when:15d -stocks -stock -investing -investment -dividend',
   breaking:'("breaking technology" OR "zero-day" OR ransomware OR "major outage" OR "cyber attack" OR acquisition OR "AI launch" OR "chip launch") when:2d',
-  chatgpt:'(ChatGPT OR OpenAI OR GPT OR Codex OR Sora) when:30d',
-  claude:'(Claude OR Anthropic) when:60d',
-  gemini:'(Gemini OR "Google AI" OR DeepMind) when:45d',
-  'ai-models':'("AI model" OR LLM OR "reasoning model" OR Llama OR Qwen OR Mistral OR DeepSeek) when:30d',
-  'ai-video':'("AI video" OR Sora OR Runway OR Veo OR Kling OR Luma OR Higgsfield) when:60d',
-  'ai-images':'("AI image" OR Midjourney OR "Stable Diffusion" OR Flux OR "image generation") when:60d',
-  coding:'("AI coding" OR "coding agent" OR Copilot OR Cursor OR Codex OR GitHub) when:45d',
-  hardware:'(Nvidia OR AMD OR Intel OR GPU OR semiconductor OR "AI chip" OR hardware OR "data center") when:30d',
-  robotics:'(robotics OR humanoid OR "AI robot" OR "autonomous robot") when:60d',
-  business:'((technology OR AI OR cloud OR semiconductor OR software) AND (startup OR funding OR acquisition OR merger OR enterprise OR valuation OR earnings)) when:30d',
-  'it-news':'("information technology" OR "enterprise technology" OR "cloud computing" OR "enterprise software" OR Microsoft OR Windows OR Linux OR networking OR storage OR servers OR "data center" OR SaaS OR infrastructure) when:14d',
-  cybersecurity:'(cybersecurity OR "cyber attack" OR ransomware OR "data breach" OR malware OR "zero-day" OR vulnerability OR CISA OR phishing OR hacking OR "threat actor") when:14d',
-  sysadmin:'(sysadmin OR "system administrator" OR "Windows Server" OR "Active Directory" OR "Microsoft 365" OR "Exchange Server" OR VMware OR Hyper-V OR "Linux administration" OR patching OR outage OR backup OR "server administration") when:30d',
-  'topic-claude':'(Claude OR Anthropic) when:90d',
-  'topic-nvidia-earnings':'(Nvidia earnings OR Nvidia revenue OR Nvidia results) when:90d',
-  'topic-gemini':'(Gemini OR "Google AI" OR DeepMind) when:90d',
-  'topic-sora':'(OpenAI Sora OR "Sora video" OR "Sora AI") when:90d',
-  'topic-ai-agents':'("AI agents" OR "agentic AI" OR "autonomous AI agents") when:60d',
-  'tool-magai':'(Magai OR "Magai AI") when:365d',
-  'tool-opusclip':'(OpusClip OR "Opus Clip") when:365d',
-  'tool-codestral':'(Codestral OR "Mistral Codestral") when:365d',
-  'tool-leonardo-ai':'("Leonardo AI" OR "Leonardo.Ai") when:365d',
-  'tool-voicemod-ai':'(Voicemod OR "Voicemod AI") when:365d'
+  chatgpt:'(ChatGPT OR OpenAI OR GPT OR Codex OR Sora) when:15d',
+  claude:'(Claude OR Anthropic) when:15d',
+  gemini:'(Gemini OR "Google AI" OR DeepMind) when:15d',
+  'ai-models':'("AI model" OR LLM OR "reasoning model" OR Llama OR Qwen OR Mistral OR DeepSeek) when:15d',
+  'ai-video':'("AI video" OR Sora OR Runway OR Veo OR Kling OR Luma OR Higgsfield) when:15d',
+  'ai-images':'("AI image" OR Midjourney OR "Stable Diffusion" OR Flux OR "image generation") when:15d',
+  coding:'("AI coding" OR "coding agent" OR Copilot OR Cursor OR Codex OR GitHub) when:15d',
+  hardware:'(Nvidia OR AMD OR Intel OR GPU OR semiconductor OR "AI chip" OR hardware OR "data center") when:15d',
+  robotics:'(robotics OR humanoid OR "AI robot" OR "autonomous robot") when:15d',
+  business:'((technology OR AI OR cloud OR semiconductor OR software) AND (startup OR funding OR acquisition OR merger OR enterprise OR valuation OR earnings)) when:15d',
+  'it-news':'("information technology" OR "enterprise technology" OR "cloud computing" OR "enterprise software" OR Microsoft OR Windows OR Linux OR networking OR storage OR servers OR "data center" OR SaaS OR infrastructure) when:15d',
+  cybersecurity:'(cybersecurity OR "cyber attack" OR ransomware OR "data breach" OR malware OR "zero-day" OR vulnerability OR CISA OR phishing OR hacking OR "threat actor") when:15d',
+  sysadmin:'(sysadmin OR "system administrator" OR "Windows Server" OR "Active Directory" OR "Microsoft 365" OR "Exchange Server" OR VMware OR Hyper-V OR "Linux administration" OR patching OR outage OR backup OR "server administration") when:15d',
+  'topic-claude':'(Claude OR Anthropic) when:15d',
+  'topic-nvidia-earnings':'(Nvidia earnings OR Nvidia revenue OR Nvidia results) when:15d',
+  'topic-gemini':'(Gemini OR "Google AI" OR DeepMind) when:15d',
+  'topic-sora':'(OpenAI Sora OR "Sora video" OR "Sora AI") when:15d',
+  'topic-ai-agents':'("AI agents" OR "agentic AI" OR "autonomous AI agents") when:15d',
+  'tool-magai':'(Magai OR "Magai AI") when:15d',
+  'tool-opusclip':'(OpusClip OR "Opus Clip") when:15d',
+  'tool-codestral':'(Codestral OR "Mistral Codestral") when:15d',
+  'tool-leonardo-ai':'("Leonardo AI" OR "Leonardo.Ai") when:15d',
+  'tool-voicemod-ai':'(Voicemod OR "Voicemod AI") when:15d'
 };
 
 const regions=[
@@ -87,16 +88,17 @@ function itemLink(b){let d=tag(b,'link');if(d&&/^https?:/i.test(d))return d;cons
 function hash(s){let h=0;for(let i=0;i<s.length;i++)h=(h*31+s.charCodeAt(i))>>>0;return h.toString(36)}
 function feedImage(b){return attr(b,/<media:content[^>]+url=["']([^"']+)["']/i)||attr(b,/<enclosure[^>]+url=["']([^"']+)["'][^>]*type=["']image/i)||attr(b,/<media:thumbnail[^>]+url=["']([^"']+)["']/i)||attr(b,/<img[^>]+src=["']([^"']+)["']/i)}
 function parse(xml,source){const blocks=[...(xml.match(/<item\b[\s\S]*?<\/item>/gi)||[]),...(xml.match(/<entry\b[\s\S]*?<\/entry>/gi)||[])];return blocks.slice(0,75).map(b=>{const title=tag(b,'title')||'Untitled technology story',link=itemLink(b)||'#',description=(tag(b,'description')||tag(b,'summary')||tag(b,'content')).slice(0,340)||'Latest technology news and analysis.',date=tag(b,'pubDate')||tag(b,'published')||tag(b,'updated')||new Date().toISOString();let publishedAt;try{publishedAt=new Date(date).toISOString()}catch{publishedAt=new Date().toISOString()}return{id:hash(source+title+link),title,link,source,publishedAt,description,image:feedImage(b)}}).filter(x=>/^https?:\/\//i.test(x.link))}
-async function getText(url,timeout=2300){const c=new AbortController(),t=setTimeout(()=>c.abort(),timeout);try{const r=await fetch(url,{headers:{'user-agent':'Mozilla/5.0 AI-News-Now/WorldTech-1.0','accept':'application/rss+xml,application/atom+xml,application/xml,text/xml;q=0.9,*/*;q=0.6'},signal:c.signal,redirect:'follow'});if(!r.ok)throw Error(String(r.status));return await r.text()}finally{clearTimeout(t)}}
+async function getText(url,timeout=2300){const c=new AbortController(),t=setTimeout(()=>c.abort(),timeout);try{const r=await fetch(url,{headers:{'user-agent':'Mozilla/5.0 AI-News-Now/WorldTech-1.1','accept':'application/rss+xml,application/atom+xml,application/xml,text/xml;q=0.9,*/*;q=0.6'},signal:c.signal,redirect:'follow'});if(!r.ok)throw Error(String(r.status));return await r.text()}finally{clearTimeout(t)}}
 async function load(feed){try{return parse(await getText(feed.url),feed.source)}catch{return[]}}
 function googleFeed(q,r){return{source:`Google News · ${r.name}`,url:`https://news.google.com/rss/search?q=${encodeURIComponent(q)}&hl=${r.hl}&gl=${r.gl}&ceid=${encodeURIComponent(r.ceid)}`}}
 function textOf(n){return `${n.title} ${n.description} ${n.source}`}
-function keep(n,category){const t=textOf(n);if(FINANCE_SPAM.test(t))return false;if(NON_TECH_NOISE.test(t)&&!TECH.test(t))return false;if(!TECH.test(t))return false;const re=categoryTest[category];return re?re.test(t):true}
+function recent(n){const t=+new Date(n.publishedAt),age=Date.now()-t;return Number.isFinite(t)&&age>=-60*60*1000&&age<=MAX_AGE_MS}
+function keep(n,category){const t=textOf(n);if(!recent(n))return false;if(FINANCE_SPAM.test(t))return false;if(NON_TECH_NOISE.test(t)&&!TECH.test(t))return false;if(!TECH.test(t))return false;const re=categoryTest[category];return re?re.test(t):true}
 function dedupeKey(n){return n.title.toLowerCase().replace(/\s+-\s+[^-]{2,60}$/,'').replace(/[^a-z0-9]+/g,' ').trim().split(' ').slice(0,13).join(' ')}
 function topic(n){const t=textOf(n);if(/cyber|ransomware|malware|breach|zero-day|vulnerab|phishing|hack|security/i.test(t))return'Cyber';if(/nvidia|amd|intel|gpu|chip|semiconductor|hardware|processor|data center/i.test(t))return'Hardware';if(/windows|linux|server|active directory|cloud|network|storage|database|infrastructure/i.test(t))return'IT';if(/openai|chatgpt|anthropic|claude|gemini|deepmind|artificial intelligence|\bai\b|llm|model/i.test(t))return'AI';if(/robot/i.test(t))return'Robotics';return'Tech'}
 function why(n){const k=topic(n);if(k==='Cyber')return'This may affect security exposure, defenses or incident response.';if(k==='Hardware')return'This may affect computing capacity, chips, devices or data-center infrastructure.';if(k==='IT')return'This may affect enterprise systems, cloud services, administrators or infrastructure.';if(k==='AI')return'This may change AI capabilities, products, developer workflows or adoption.';if(k==='Robotics')return'This may affect automation, manufacturing or autonomous systems.';return'This is a current technology development with potential global industry impact.'}
 function imageFor(n,i,origin){const p=new URLSearchParams({article:String(n.link||''),seed:String(n.id||hash(n.title+n.link+i)),title:String(n.title||'Technology news').slice(0,100),variant:String(i)});if(/^https?:\/\//i.test(n.image||''))p.set('image',n.image);return `${origin}/api/article-image?${p.toString()}`}
-function selectFeeds(category,q){const query=q?`"${q}" technology when:30d`:(queries[category]||queries.home);const google=regions.map(r=>googleFeed(query,r));if(category==='cybersecurity'||category==='breaking')return[...google,...securityFeeds];if(category==='sysadmin')return[...google,sysadminFeed,...securityFeeds.slice(0,2),techFeeds[4],techFeeds[5]];if(category==='it-news')return[...google,techFeeds[2],techFeeds[3],techFeeds[4],techFeeds[5],techFeeds[6]];if(category==='all-news'||category==='home')return[...google,...techFeeds,...securityFeeds.slice(0,2)];if(['hardware','robotics','business','coding'].includes(category))return[...google,...techFeeds];return[...google,...techFeeds.slice(0,4)]}
+function selectFeeds(category,q){const query=q?`"${q}" technology when:15d`:(queries[category]||queries.home);const google=regions.map(r=>googleFeed(query,r));if(category==='cybersecurity'||category==='breaking')return[...google,...securityFeeds];if(category==='sysadmin')return[...google,sysadminFeed,...securityFeeds.slice(0,2),techFeeds[4],techFeeds[5]];if(category==='it-news')return[...google,techFeeds[2],techFeeds[3],techFeeds[4],techFeeds[5],techFeeds[6]];if(category==='all-news'||category==='home')return[...google,...techFeeds,...securityFeeds.slice(0,2)];if(['hardware','robotics','business','coding'].includes(category))return[...google,...techFeeds];return[...google,...techFeeds.slice(0,4)]}
 
 module.exports=async function(req,res){
   res.setHeader('Cache-Control','public, max-age=20, stale-while-revalidate=90');
@@ -109,5 +111,5 @@ module.exports=async function(req,res){
   const proto=String(req.headers['x-forwarded-proto']||'https').split(',')[0].trim(),host=String(req.headers['x-forwarded-host']||req.headers.host||'').split(',')[0].trim(),origin=host?`${proto}://${host}`:'https://cert-forge-git-ai-news-now-site-cloud-drive.vercel.app';
   news=news.map((n,i)=>({...n,topic:topic(n),importance:Math.max(1,100-i),whyItMatters:why(n),image:imageFor(n,i,origin)}));
   const sourceCounts=news.reduce((a,n)=>(a[n.source]=(a[n.source]||0)+1,a),{});
-  res.status(200).json({updatedAt:new Date().toISOString(),category,query,count:news.length,ranking:'newest-first-worldwide-tech-only',sourceCounts,news});
+  res.status(200).json({updatedAt:new Date().toISOString(),refreshSeconds:60,maxAgeDays:15,category,query,count:news.length,ranking:'newest-first-worldwide-tech-only',sourceCounts,news});
 };
