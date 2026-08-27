@@ -1,6 +1,11 @@
 (()=>{
+/* Start before Vercel's injected preview script is parsed so visitors do not get collaboration UI. */
+const stripVercel=root=>{if(!root?.querySelectorAll)return;root.querySelectorAll('script[src*="vercel.live"],vercel-live-feedback,#vercel-live-feedback,[data-vercel-toolbar],.vercel-toolbar,iframe[src*="vercel.live"],iframe[src*="vercel.com/live"]').forEach(n=>n.remove())};
+stripVercel(document);new MutationObserver(m=>{for(const x of m)for(const n of x.addedNodes){if(n.nodeType===1){if(n.matches?.('script[src*="vercel.live"],vercel-live-feedback,[data-vercel-toolbar],iframe[src*="vercel.live"]'))n.remove();else stripVercel(n)}}}).observe(document.documentElement,{childList:true,subtree:true});
 if(!document.querySelector('link[href="/header-balance.css"]')){const l=document.createElement('link');l.rel='stylesheet';l.href='/header-balance.css';document.head.appendChild(l)}
+if(!document.querySelector('link[href="/site-upgrade.css"]')){const l=document.createElement('link');l.rel='stylesheet';l.href='/site-upgrade.css';document.head.appendChild(l)}
 if(!document.querySelector('script[src="/breaking-live.js"]')){const s=document.createElement('script');s.src='/breaking-live.js';s.defer=true;document.head.appendChild(s)}
+if(!document.querySelector('script[src="/site-upgrade.js"]')){const s=document.createElement('script');s.src='/site-upgrade.js';s.defer=true;document.head.appendChild(s)}
 const root=document.getElementById('app');if(!root||!window.crypto?.subtle)return;
 const exact=new Map(),visual=[];let scheduled=false,running=false,serial=0;
 const enc=s=>encodeURIComponent(String(s||''));
