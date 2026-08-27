@@ -28,10 +28,8 @@ function link(b){let d=tag(b,'link');if(d&&/^https?:/i.test(d))return d;let m=b.
 function hash(s){let h=0;for(let i=0;i<s.length;i++)h=(h*31+s.charCodeAt(i))>>>0;return h.toString(36)}
 function feedImage(b){return attr(b,/<media:content[^>]+url=["']([^"']+)["']/i)||attr(b,/<enclosure[^>]+url=["']([^"']+)["'][^>]*type=["']image/i)||attr(b,/<enclosure[^>]+type=["']image[^"']*["'][^>]+url=["']([^"']+)["']/i)||attr(b,/<media:thumbnail[^>]+url=["']([^"']+)["']/i)||attr(b,/<img[^>]+src=["']([^"']+)["']/i)}
 function parse(xml,source){let blocks=[...(xml.match(/<item\b[\s\S]*?<\/item>/gi)||[]),...(xml.match(/<entry\b[\s\S]*?<\/entry>/gi)||[])];return blocks.slice(0,70).map(b=>{let title=tag(b,'title')||'Untitled news story',url=link(b)||'#',description=(tag(b,'description')||tag(b,'summary')||tag(b,'content')).slice(0,320)||'Latest technology news and analysis.',date=tag(b,'pubDate')||tag(b,'published')||tag(b,'updated')||new Date().toISOString(),publishedAt;try{publishedAt=new Date(date).toISOString()}catch{publishedAt=new Date().toISOString()}return{id:hash(source+title+url),title,link:url,source,publishedAt,description,image:feedImage(b)}}).filter(x=>/^https?:\/\//i.test(x.link))}
-async function getText(url,timeout=6500){const c=new AbortController(),t=setTimeout(()=>c.abort(),timeout);try{const r=await fetch(url,{headers:{'user-agent':'Mozilla/5.0 AI-News-Now/6.0','accept':'text/html,application/rss+xml,application/atom+xml,application/xml;q=0.9,*/*;q=0.8'},signal:c.signal,redirect:'follow'});if(!r.ok)throw Error(String(r.status));return{text:await r.text(),url:r.url}}finally{clearTimeout(t)}}
+async function getText(url,timeout=3000){const c=new AbortController(),t=setTimeout(()=>c.abort(),timeout);try{const r=await fetch(url,{headers:{'user-agent':'Mozilla/5.0 AI-News-Now/6.1','accept':'text/html,application/rss+xml,application/atom+xml,application/xml;q=0.9,*/*;q=0.8'},signal:c.signal,redirect:'follow'});if(!r.ok)throw Error(String(r.status));return{text:await r.text(),url:r.url}}finally{clearTimeout(t)}}
 async function load(f){try{return parse((await getText(f.url)).text,f.source)}catch{return[]}}
-function ogImage(html){return attr(html,/<meta[^>]+property=["']og:image(?::secure_url)?["'][^>]+content=["']([^"']+)["']/i)||attr(html,/<meta[^>]+content=["']([^"']+)["'][^>]+property=["']og:image(?::secure_url)?["']/i)||attr(html,/<meta[^>]+name=["']twitter:image(?::src)?["'][^>]+content=["']([^"']+)["']/i)||attr(html,/<meta[^>]+content=["']([^"']+)["'][^>]+name=["']twitter:image(?::src)?["']/i)}
-async function enrich(n){let image=n.image;if(n.source!=='Google News'&&n.source!=='r/sysadmin'){try{const page=await getText(n.link,3200),og=ogImage(page.text);if(og)image=og.startsWith('//')?'https:'+og:og;if(page.url&&!page.url.includes('news.google.com'))n.link=page.url}catch{}}return{...n,image:/^https?:\/\//i.test(image||'')?image:''}}
 function googleFeedFor(category,query=''){const q=query?`"${query}" when:365d`:(categoryQueries[category]||categoryQueries.home);return{source:'Google News',url:`https://news.google.com/rss/search?q=${encodeURIComponent(q)}&hl=en-US&gl=US&ceid=US:en`}}
 function imageKey(url=''){return String(url).toLowerCase().replace(/^https?:\/\//,'').split('#')[0].split('?')[0].replace(/\/$/,'')}
 function resolvedImageUrl(n,i,origin,direct=''){const p=new URLSearchParams({article:String(n.link||''),seed:String(n.id||hash(n.title+n.link+i)),title:String(n.title||'News').slice(0,100),variant:String(i)});if(direct)p.set('image',direct);return `${origin}/api/article-image?${p.toString()}`}
@@ -49,7 +47,9 @@ function importance(n,category){const txt=(n.title+' '+n.description+' '+n.sourc
 function addSignals(n,category){const topic=classify(n),score=importance(n,category);return{...n,topic,importance:score,whyItMatters:why(topic,n)}}
 
 module.exports=async function(req,res){
-  res.setHeader('Cache-Control','s-maxage=300, stale-while-revalidate=900');
+  res.setHeader('Cache-Control','public, max-age=60, stale-while-revalidate=300');
+  res.setHeader('CDN-Cache-Control','public, max-age=300, stale-while-revalidate=900');
+  res.setHeader('Vercel-CDN-Cache-Control','public, max-age=300, stale-while-revalidate=900');
   const category=String(req.query?.category||'home').toLowerCase(),query=String(req.query?.q||'').trim().slice(0,120);
   let feeds;
   if(category==='cybersecurity') feeds=[googleFeedFor(category,query),...securityFeeds];
@@ -59,8 +59,8 @@ module.exports=async function(req,res){
   else feeds=[googleFeedFor(category,query),...baseFeeds];
   feeds=uniqueFeeds(feeds);
   let live=(await Promise.all(feeds.map(load))).flat(),pool=live.length>=12?live:[...live,...fallback],seen=new Set();
-  let news=pool.filter(n=>{let k=n.title.toLowerCase().replace(/[^a-z0-9]+/g,' ').split(' ').slice(0,11).join(' ');if(seen.has(k))return false;seen.add(k);return true}).map(n=>addSignals(n,category)).sort((a,b)=>b.importance-a.importance||+new Date(b.publishedAt)-+new Date(a.publishedAt)).slice(0,100);
-  const top=await Promise.all(news.slice(0,36).map(enrich));news=[...top,...news.slice(36).map(n=>({...n,image:/^https?:\/\//i.test(n.image||'')?n.image:''}))];
+  const maxItems=category==='all-news'?80:60;
+  let news=pool.filter(n=>{let k=n.title.toLowerCase().replace(/[^a-z0-9]+/g,' ').split(' ').slice(0,11).join(' ');if(seen.has(k))return false;seen.add(k);return true}).map(n=>addSignals(n,category)).sort((a,b)=>b.importance-a.importance||+new Date(b.publishedAt)-+new Date(a.publishedAt)).slice(0,maxItems);
   const proto=String(req.headers['x-forwarded-proto']||'https').split(',')[0].trim(),host=String(req.headers['x-forwarded-host']||req.headers.host||'').split(',')[0].trim(),origin=host?`${proto}://${host}`:'https://cert-forge-git-ai-news-now-site-cloud-drive.vercel.app';
   news=routeImagesThroughPublisher(news,origin);
   const sourceCounts=news.reduce((a,n)=>(a[n.source]=(a[n.source]||0)+1,a),{});
