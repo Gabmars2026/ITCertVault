@@ -1,11 +1,5 @@
-# AI News Now
+# AI News Now preview branch
 
-A dark AI-news dashboard with real working navigation routes and an automatic RSS collector that does not require a paid news API or API key.
+This branch contains the AI News Now automatic AI-news dashboard preview under `CertForge/`. The live site collects public AI-news feeds without a paid news API, keeps category/search routes functional, and uses the supplied reference design assets for the dashboard imagery.
 
-## Pages
-Home, Breaking, ChatGPT, Claude, Gemini, AI Models, AI Video, AI Images, Coding, Hardware, Robotics, Business, All News, Search, Subscribe, and About.
-
-## Automatic news
-`api/news.js` reads public RSS feeds from TechCrunch AI, The Verge AI, VentureBeat AI, and Hugging Face. Responses are cached for 15 minutes, obvious duplicate headlines are removed, and full stories open at the original publisher.
-
-The favicon is a custom AI-brain icon matching the purple/blue visual direction of the site.
+Latest visual pass: reference-matched dark dashboard layout; Subscribe control removed from the visible interface.
