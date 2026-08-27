@@ -54,3 +54,12 @@ vercel-live-feedback,#vercel-live-feedback,[data-vercel-toolbar],.vercel-toolbar
 @media(max-width:600px){
   .reference-header .brand-copy small{display:none!important}.ain-saved-header{display:none!important}.reader-toolbar{padding:9px;gap:7px;margin-top:12px}.reader-select{width:100%;flex-basis:calc(50% - 4px);min-width:0}.reader-chip{flex:1}.why-matters{font-size:10px!important}.story-action{width:30px;height:30px}.card-upgrade-row{margin-bottom:6px}.saved-drawer{width:100%}.breaking-summary{gap:6px}.breaking-count{flex:1;min-width:90px}
 }
+
+/* Desktop navigation is hover-only. Native <details> open state must never pin a menu open. */
+@media(min-width:981px){
+  .nav-group>.nav-menu{display:none!important}
+  .nav-group:hover>.nav-menu{display:grid!important;gap:3px}
+  .nav-group[open]:not(:hover)>.nav-menu{display:none!important}
+  .nav-group>summary:after{content:'⌄'!important;color:#708ba3!important}
+  .nav-group:hover>summary:after{content:'⌃'!important;color:#c4d7e8!important}
+}
