@@ -10,10 +10,10 @@ const TOOLS={
  'tool-leonardo-ai':{name:'Leonardo AI',category:'AI image and video generation',official:'https://leonardo.ai/',query:'Leonardo AI',desc:'Leonardo AI is a generative creative platform for producing and editing images and video with AI-assisted visual tools.'},
  'tool-voicemod-ai':{name:'Voicemod AI',category:'Real-time AI voice tools',official:'https://www.voicemod.net/en/ai-voices/',query:'Voicemod AI',desc:'Voicemod provides real-time AI voice transformation, voice effects and soundboard tools for games, streaming and communication apps.'}
 };
-const SOURCE_PAGES=new Set(['bleepingcomputer','hacker-news','securityweek','ars-security','dark-reading','the-record','techpowerup','the-register']);
+const SOURCE_PAGES=new Set(['bleepingcomputer','hacker-news','securityweek','ars-security','dark-reading','the-record','cybernews','techpowerup','the-register']);
 const OWN_REFRESH=new Set([...SOURCE_PAGES,'breaking','ai-tools',...Object.keys(TOOLS)]);
 function newsCard(n){return `<article class="card"><a class="art" href="${esc(n.link)}" target="_blank" rel="noreferrer"><img class="news-img" src="${esc(n.image||'')}" alt="" loading="lazy" decoding="async" referrerpolicy="no-referrer"></a><div class="body"><div class="meta">${esc(n.source||'News')} · ${ago(n.publishedAt)}</div><h3><a href="${esc(n.link)}" target="_blank" rel="noreferrer">${esc(n.title)}</a></h3><p>${esc(n.description||'Latest related technology news.')}</p><div class="foot"><a href="${esc(n.link)}" target="_blank" rel="noreferrer">${esc(n.source||'News')} · Read source ↗</a></div></div></article>`}
-function cleanHearts(){document.querySelectorAll('.card .foot span').forEach(s=>{if(/[♡♥]/.test(s.textContent||''))s.remove()})}
+function cleanHearts(){document.querySelectorAll('.card .foot span,.story-save').forEach(s=>{if(s.matches('.story-save')||/[♡♥☆★]/.test(s.textContent||''))s.remove()})}
 function restoreScroll(){try{const k='ainn-scroll:'+location.pathname+location.search,v=sessionStorage.getItem(k);if(v!==null){sessionStorage.removeItem(k);requestAnimationFrame(()=>requestAnimationFrame(()=>scrollTo(0,+v||0)))}}catch{}}
 function feedKey(){return key==='search'||key==='daily-brief'?'all-news':key}
 let lastSignature='';
