@@ -39,6 +39,7 @@
         if(!key||seen.has(key))a.remove();else seen.add(key);
       });
     });
+    nav.querySelectorAll('.outages-nav').forEach(a=>a.textContent='OUTAGES');
     const topSeen=new Set();
     nav.querySelectorAll('.ain-nav-shell > a.ain-nav-link').forEach(a=>{
       let key=a.getAttribute('href')||'';
