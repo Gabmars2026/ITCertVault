@@ -2,9 +2,10 @@
   function cleanNav(){
     document.querySelectorAll('.nav .nav-group').forEach(group=>{
       const label=(group.querySelector('summary')?.textContent||'').trim().toUpperCase();
-      if(label!=='TECHNOLOGY')return;
       group.querySelectorAll('.nav-menu a').forEach(a=>{
-        if(/downdetector|live outages/i.test(a.textContent||''))a.remove();
+        const text=(a.textContent||'').trim();
+        if(label==='TECHNOLOGY'&&/downdetector|live outages/i.test(text))a.remove();
+        if(label==='SECURITY'&&/ars technica security/i.test(text))a.remove();
       });
     });
   }
