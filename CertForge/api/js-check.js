@@ -1,15 +1,15 @@
-const fs=require('fs');
-const path=require('path');
 const vm=require('vm');
 
-module.exports=(req,res)=>{
+module.exports=async(req,res)=>{
   const files=['app.js','fast-news.js','render-guard.js','source-pages.js','image-dedupe.js','notifications.js','site-upgrade.js','instant-home.js'];
+  const proto=req.headers['x-forwarded-proto']||'https';
+  const host=req.headers.host;
   const results=[];
-  const base=path.join(process.cwd(),'CertForge');
   for(const file of files){
     try{
-      const p=path.join(base,file);
-      const src=fs.readFileSync(p,'utf8');
+      const r=await fetch(`${proto}://${host}/${file}?diag=${Date.now()}`,{cache:'no-store'});
+      const src=await r.text();
+      if(!r.ok)throw new Error(`HTTP ${r.status}`);
       new vm.Script(src,{filename:file});
       results.push({file,ok:true,bytes:Buffer.byteLength(src)});
     }catch(err){
