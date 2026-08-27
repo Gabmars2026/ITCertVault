@@ -1,0 +1,87 @@
+/* Dedicated phone/tablet navigation drawer. Loaded by nav-cleanup.js so older page shells get the same fix. */
+@media (max-width:980px){
+  body.ain-mobile-menu-open{overflow:hidden!important;touch-action:none}
+  .mobile-nav-toggle{display:flex!important;position:relative!important;z-index:2202!important}
+  .nav{position:relative!important;z-index:2200!important;height:0!important;min-height:0!important;overflow:visible!important;border:0!important;background:transparent!important}
+  .nav .ain-nav-shell{display:none!important}
+  .nav.mobile-open .ain-nav-shell{
+    display:flex!important;
+    position:fixed!important;
+    z-index:2201!important;
+    top:var(--ain-mobile-nav-top,118px)!important;
+    left:0!important;
+    right:0!important;
+    bottom:0!important;
+    width:100%!important;
+    min-width:0!important;
+    max-width:none!important;
+    max-height:none!important;
+    margin:0!important;
+    padding:12px 14px calc(24px + env(safe-area-inset-bottom))!important;
+    flex-direction:column!important;
+    align-items:stretch!important;
+    justify-content:flex-start!important;
+    gap:6px!important;
+    overflow-x:hidden!important;
+    overflow-y:auto!important;
+    overscroll-behavior:contain!important;
+    background:linear-gradient(180deg,#061522 0%,#04101a 100%)!important;
+    border-top:1px solid #29445f!important;
+    border-bottom:0!important;
+    box-shadow:0 22px 60px rgba(0,0,0,.56)!important;
+  }
+  .nav.mobile-open .ain-nav-link,
+  .nav.mobile-open .nav-group>summary{
+    width:100%!important;
+    min-height:50px!important;
+    height:50px!important;
+    display:flex!important;
+    align-items:center!important;
+    justify-content:space-between!important;
+    padding:0 15px!important;
+    margin:0!important;
+    border:1px solid transparent!important;
+    border-radius:9px!important;
+    background:#081a29!important;
+    color:#e6eef6!important;
+    font-size:14px!important;
+    font-weight:800!important;
+    letter-spacing:.02em!important;
+    text-decoration:none!important;
+    white-space:normal!important;
+  }
+  .nav.mobile-open .ain-nav-link.active,
+  .nav.mobile-open .nav-group.active>summary{background:#102a42!important;border-color:#31536f!important;color:#fff!important}
+  .nav.mobile-open .ain-nav-link.breaking-nav{color:#ff788c!important}
+  .nav.mobile-open .nav-group{width:100%!important;height:auto!important;position:relative!important;overflow:visible!important}
+  .nav.mobile-open .nav-menu{
+    position:static!important;
+    display:none!important;
+    width:calc(100% - 16px)!important;
+    min-width:0!important;
+    margin:5px 0 7px 16px!important;
+    padding:6px!important;
+    border:1px solid #203c54!important;
+    border-radius:9px!important;
+    background:#061a29!important;
+    box-shadow:none!important;
+    backdrop-filter:none!important;
+  }
+  .nav.mobile-open .nav-group[open]>.nav-menu{display:grid!important;gap:4px!important}
+  .nav.mobile-open .nav-group:not([open])>.nav-menu{display:none!important}
+  .nav.mobile-open .nav-menu a{
+    min-height:44px!important;
+    height:auto!important;
+    display:flex!important;
+    align-items:center!important;
+    padding:10px 13px!important;
+    border-radius:7px!important;
+    color:#b9cada!important;
+    background:transparent!important;
+    font-size:13px!important;
+    font-weight:700!important;
+    text-transform:none!important;
+  }
+  .nav.mobile-open .nav-menu a:active{background:#102b43!important;color:#fff!important}
+  .nav.mobile-open .nav-group>summary:after{display:none!important;content:none!important}
+}
