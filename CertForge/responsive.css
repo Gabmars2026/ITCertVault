@@ -1,5 +1,6 @@
 /* Whole-site responsive layout pass */
 html,body{max-width:100%;overflow-x:hidden}img,svg{max-width:100%}.top,.nav,.dashboard,.section,.brief-page,footer{width:100%}.center,.left,.right,.tools,.home-feed,.card,.panel,.sectiongrid>*{min-width:0}
+.nav>div{justify-content:center}
 
 /* Fluid desktop sizing */
 .dashboard{width:min(100%,1480px);padding-inline:clamp(10px,1.3vw,20px)}
@@ -44,7 +45,7 @@ html,body{max-width:100%;overflow-x:hidden}img,svg{max-width:100%}.top,.nav,.das
   .top.reference-header{grid-template-columns:1fr auto;grid-template-rows:auto auto;gap:9px 12px;padding:9px 12px}
   .reference-header .brand{grid-column:1;grid-row:1}.reference-header .actions{grid-column:2;grid-row:1}
   .reference-header .search{grid-column:1/-1;grid-row:2;width:100%;height:42px}
-  .nav{top:119px;height:43px;overflow-x:auto;overscroll-behavior-x:contain;scrollbar-width:none}.nav::-webkit-scrollbar{display:none}.nav>div{gap:20px;padding-inline:12px}
+  .nav{top:119px;height:43px;overflow-x:auto;overscroll-behavior-x:contain;scrollbar-width:none}.nav::-webkit-scrollbar{display:none}.nav>div{justify-content:flex-start;gap:20px;padding-inline:12px}
   .dashboard{grid-template-columns:1fr;grid-template-areas:'c' 'l' 'r' 't';padding:10px 12px 24px}
   .left,.right{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.left .panel+.panel,.right .panel+.panel{margin-top:0}
   .hero{height:auto;min-height:430px;grid-template-columns:1fr}.visual{position:absolute;inset:0}.visual:after{background:linear-gradient(90deg,rgba(2,7,13,.96) 0%,rgba(2,7,13,.72) 58%,rgba(2,7,13,.34) 100%),linear-gradient(0deg,rgba(2,7,13,.66),transparent 55%)}.hcopy{width:min(78%,580px);min-height:430px;padding:78px 58px 72px;background:transparent}.hcopy p{max-width:520px;font-size:12px}
