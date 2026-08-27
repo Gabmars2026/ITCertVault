@@ -1,6 +1,11 @@
 /* Header + navigation polish: keep brand/search/actions visually grouped and remove false nav spacer. */
 .nav{top:0!important;margin-top:0!important}
 
+/* Clean navigation labels: dropdown behavior remains, indicator arrows are hidden. */
+.nav .nav-group>summary::after{display:none!important;content:none!important}
+.nav .outages-nav{font-size:0!important}
+.nav .outages-nav::after{content:'OUTAGES';font-size:13px!important;font-weight:800;letter-spacing:.035em;color:#8fd4ff}
+
 @media(min-width:981px){
   .top.reference-header{
     grid-template-columns:auto minmax(460px,560px) auto!important;
@@ -25,8 +30,10 @@
   }
   .reference-header .search{width:min(470px,42vw)!important}
   .nav .ain-nav-link,.nav .nav-group>summary{font-size:12px!important;padding-left:9px!important;padding-right:9px!important}
+  .nav .outages-nav::after{font-size:12px!important}
 }
 
 @media(max-width:980px){
   .nav{top:0!important;margin-top:0!important}
+  .nav .outages-nav::after{font-size:12px!important}
 }
