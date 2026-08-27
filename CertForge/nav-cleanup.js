@@ -4,7 +4,8 @@
       ['/cybersecurity/','Cybersecurity'],
       ['/securityweek/','SecurityWeek'],
       ['/dark-reading/','Dark Reading'],
-      ['/the-record/','The Record']
+      ['/the-record/','The Record'],
+      ['/cybernews/','Cybernews']
     ],
     PUBLISHERS:[
       ['/bleepingcomputer/','BleepingComputer'],
