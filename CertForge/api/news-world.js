@@ -16,11 +16,12 @@ const securityFeeds=[
 ];
 const sysadminFeed={source:'r/sysadmin',url:'https://www.reddit.com/r/sysadmin/.rss'};
 const MAX_AGE_MS=15*24*60*60*1000;
+const ARCHIVE_LIMIT=450;
 
 const queries={
   home:'("technology" OR "artificial intelligence" OR cybersecurity OR semiconductor OR software OR hardware OR robotics OR "cloud computing" OR "data center" OR smartphone OR quantum) when:15d -stocks -stock -investing -investment -dividend',
   'all-news':'("technology" OR "artificial intelligence" OR cybersecurity OR semiconductor OR software OR hardware OR robotics OR "cloud computing" OR "data center" OR smartphone OR quantum) when:15d -stocks -stock -investing -investment -dividend',
-  breaking:'("breaking technology" OR "zero-day" OR ransomware OR "major outage" OR "cyber attack" OR acquisition OR "AI launch" OR "chip launch") when:2d',
+  breaking:'("breaking technology" OR "zero-day" OR ransomware OR "major outage" OR "cyber attack" OR acquisition OR "AI launch" OR "chip launch") when:15d',
   chatgpt:'(ChatGPT OR OpenAI OR GPT OR Codex OR Sora) when:15d',
   claude:'(Claude OR Anthropic) when:15d',
   gemini:'(Gemini OR "Google AI" OR DeepMind) when:15d',
@@ -88,8 +89,8 @@ function attr(b,re){const m=b.match(re);return m?decode(m[1]):''}
 function itemLink(b){let d=tag(b,'link');if(d&&/^https?:/i.test(d))return d;const m=b.match(/<link[^>]+href=["']([^"']+)["']/i);return m?decode(m[1]):tag(b,'guid')}
 function hash(s){let h=0;for(let i=0;i<s.length;i++)h=(h*31+s.charCodeAt(i))>>>0;return h.toString(36)}
 function feedImage(b){return attr(b,/<media:content[^>]+url=["']([^"']+)["']/i)||attr(b,/<enclosure[^>]+url=["']([^"']+)["'][^>]*type=["']image/i)||attr(b,/<media:thumbnail[^>]+url=["']([^"']+)["']/i)||attr(b,/<img[^>]+src=["']([^"']+)["']/i)}
-function parse(xml,source){const blocks=[...(xml.match(/<item\b[\s\S]*?<\/item>/gi)||[]),...(xml.match(/<entry\b[\s\S]*?<\/entry>/gi)||[])];return blocks.slice(0,75).map(b=>{const title=tag(b,'title')||'Untitled technology story',link=itemLink(b)||'#',description=(tag(b,'description')||tag(b,'summary')||tag(b,'content')).slice(0,340)||'Latest technology news and analysis.',date=tag(b,'pubDate')||tag(b,'published')||tag(b,'updated')||new Date().toISOString();let publishedAt;try{publishedAt=new Date(date).toISOString()}catch{publishedAt=new Date().toISOString()}return{id:hash(source+title+link),title,link,source,publishedAt,description,image:feedImage(b)}}).filter(x=>/^https?:\/\//i.test(x.link))}
-async function getText(url,timeout=2300){const c=new AbortController(),t=setTimeout(()=>c.abort(),timeout);try{const r=await fetch(url,{headers:{'user-agent':'Mozilla/5.0 AI-News-Now/WorldTech-1.2','accept':'application/rss+xml,application/atom+xml,application/xml,text/xml;q=0.9,*/*;q=0.6'},signal:c.signal,redirect:'follow'});if(!r.ok)throw Error(String(r.status));return await r.text()}finally{clearTimeout(t)}}
+function parse(xml,source){const blocks=[...(xml.match(/<item\b[\s\S]*?<\/item>/gi)||[]),...(xml.match(/<entry\b[\s\S]*?<\/entry>/gi)||[])];return blocks.slice(0,100).map(b=>{const title=tag(b,'title')||'Untitled technology story',link=itemLink(b)||'#',description=(tag(b,'description')||tag(b,'summary')||tag(b,'content')).slice(0,340)||'Latest technology news and analysis.',date=tag(b,'pubDate')||tag(b,'published')||tag(b,'updated')||new Date().toISOString();let publishedAt;try{publishedAt=new Date(date).toISOString()}catch{publishedAt=new Date().toISOString()}return{id:hash(source+title+link),title,link,source,publishedAt,description,image:feedImage(b)}}).filter(x=>/^https?:\/\//i.test(x.link))}
+async function getText(url,timeout=2300){const c=new AbortController(),t=setTimeout(()=>c.abort(),timeout);try{const r=await fetch(url,{headers:{'user-agent':'Mozilla/5.0 AI-News-Now/WorldTech-1.3','accept':'application/rss+xml,application/atom+xml,application/xml,text/xml;q=0.9,*/*;q=0.6'},signal:c.signal,redirect:'follow'});if(!r.ok)throw Error(String(r.status));return await r.text()}finally{clearTimeout(t)}}
 async function load(feed){try{return parse(await getText(feed.url),feed.source)}catch{return[]}}
 function googleFeed(q,r){return{source:`Google News · ${r.name}`,url:`https://news.google.com/rss/search?q=${encodeURIComponent(q)}&hl=${r.hl}&gl=${r.gl}&ceid=${encodeURIComponent(r.ceid)}`}}
 function textOf(n){return `${n.title} ${n.description} ${n.source}`}
@@ -99,7 +100,7 @@ function dedupeKey(n){return n.title.toLowerCase().replace(/\s+-\s+[^-]{2,60}$/,
 function topic(n){const t=textOf(n);if(/cyber|ransomware|malware|breach|zero-day|vulnerab|phishing|hack|security|exploit|cve/i.test(t))return'Cyber';if(/nvidia|amd|intel|gpu|chip|semiconductor|hardware|processor|data center/i.test(t))return'Hardware';if(/windows|linux|server|active directory|cloud|network|storage|database|infrastructure/i.test(t))return'IT';if(/openai|chatgpt|anthropic|claude|gemini|deepmind|artificial intelligence|\bai\b|llm|model/i.test(t))return'AI';if(/robot/i.test(t))return'Robotics';return'Tech'}
 function why(n){const k=topic(n);if(k==='Cyber')return'This may affect security exposure, defenses or incident response.';if(k==='Hardware')return'This may affect computing capacity, chips, devices or data-center infrastructure.';if(k==='IT')return'This may affect enterprise systems, cloud services, administrators or infrastructure.';if(k==='AI')return'This may change AI capabilities, products, developer workflows or adoption.';if(k==='Robotics')return'This may affect automation, manufacturing or autonomous systems.';return'This is a current technology development with potential global industry impact.'}
 function imageFor(n,i,origin){const p=new URLSearchParams({article:String(n.link||''),seed:String(n.id||hash(n.title+n.link+i)),title:String(n.title||'Technology news').slice(0,100),variant:String(i)});if(/^https?:\/\//i.test(n.image||''))p.set('image',n.image);return `${origin}/api/article-image?${p.toString()}`}
-function selectFeeds(category,q){const query=q?`"${q}" technology when:15d`:(queries[category]||queries.home);const google=regions.map(r=>googleFeed(query,r));if(category==='cybersecurity'||category==='breaking')return[...google,...securityFeeds];if(category==='sysadmin')return[...google,sysadminFeed,...securityFeeds.slice(0,2),techFeeds[4],techFeeds[5],techFeeds[6]];if(category==='it-news')return[...google,techFeeds[2],techFeeds[3],techFeeds[4],techFeeds[5],techFeeds[6]];if(category==='all-news'||category==='home')return[...google,...techFeeds,...securityFeeds.slice(0,2)];if(['hardware','robotics','business','coding'].includes(category))return[...google,...techFeeds];return[...google,...techFeeds.slice(0,4)]}
+function selectFeeds(category,q){const query=q?`"${q}" technology when:15d`:(queries[category]||queries.home);const google=regions.map(r=>googleFeed(query,r));if(category==='cybersecurity'||category==='breaking')return[...google,...securityFeeds];if(category==='sysadmin')return[...google,sysadminFeed,...securityFeeds.slice(0,2),techFeeds[4],techFeeds[5],techFeeds[6]];if(category==='it-news')return[...google,techFeeds[2],techFeeds[3],techFeeds[4],techFeeds[5],techFeeds[6]];if(category==='all-news'||category==='home'||category==='search')return[...google,...techFeeds,...securityFeeds.slice(0,2)];if(['hardware','robotics','business','coding'].includes(category))return[...google,...techFeeds];return[...google,...techFeeds.slice(0,4)]}
 
 module.exports=async function(req,res){
   res.setHeader('Cache-Control','public, max-age=20, stale-while-revalidate=90');
@@ -107,10 +108,9 @@ module.exports=async function(req,res){
   res.setHeader('Vercel-CDN-Cache-Control','public, max-age=30, stale-while-revalidate=120');
   const category=String(req.query?.category||'home').toLowerCase(),query=String(req.query?.q||'').trim().slice(0,120);
   const feeds=selectFeeds(category,query),raw=(await Promise.all(feeds.map(load))).flat(),seen=new Set();
-  let news=raw.filter(n=>keep(n,category)).filter(n=>{const k=dedupeKey(n);if(!k||seen.has(k))return false;seen.add(k);return true}).sort((a,b)=>+new Date(b.publishedAt)-+new Date(a.publishedAt));
-  const max=category==='all-news'?90:60;news=news.slice(0,max);
+  let news=raw.filter(n=>keep(n,category)).filter(n=>{const k=dedupeKey(n);if(!k||seen.has(k))return false;seen.add(k);return true}).sort((a,b)=>+new Date(b.publishedAt)-+new Date(a.publishedAt)).slice(0,ARCHIVE_LIMIT);
   const proto=String(req.headers['x-forwarded-proto']||'https').split(',')[0].trim(),host=String(req.headers['x-forwarded-host']||req.headers.host||'').split(',')[0].trim(),origin=host?`${proto}://${host}`:'https://cert-forge-git-ai-news-now-site-cloud-drive.vercel.app';
-  news=news.map((n,i)=>({...n,topic:topic(n),importance:Math.max(1,100-i),whyItMatters:why(n),image:imageFor(n,i,origin)}));
+  news=news.map((n,i)=>({...n,topic:topic(n),importance:Math.max(1,ARCHIVE_LIMIT-i),whyItMatters:why(n),image:imageFor(n,i,origin)}));
   const sourceCounts=news.reduce((a,n)=>(a[n.source]=(a[n.source]||0)+1,a),{});
   res.status(200).json({updatedAt:new Date().toISOString(),refreshSeconds:60,maxAgeDays:15,category,query,count:news.length,ranking:'newest-first-worldwide-tech-only',sourceCounts,news});
 };
