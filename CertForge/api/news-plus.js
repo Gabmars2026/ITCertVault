@@ -1,6 +1,7 @@
 const baseHandler=require('./news-world');
 const TOMS_FEED='https://www.tomshardware.com/feeds/all';
 const MAX_AGE_MS=15*24*60*60*1000;
+const ARCHIVE_LIMIT=450;
 const TESTS={
   chatgpt:/\b(openai|chatgpt|gpt|codex|sora)\b/i,
   claude:/\b(anthropic|claude)\b/i,
@@ -36,7 +37,7 @@ function link(b){let d=tag(b,'link');if(d&&/^https?:/i.test(d))return d;const m=
 function hash(s=''){let h=0;for(let i=0;i<s.length;i++)h=(h*31+s.charCodeAt(i))>>>0;return h.toString(36)}
 function feedImage(b){return attr(b,/<media:content[^>]+url=["']([^"']+)["']/i)||attr(b,/<enclosure[^>]+url=["']([^"']+)["'][^>]*type=["']image/i)||attr(b,/<media:thumbnail[^>]+url=["']([^"']+)["']/i)||attr(b,/<img[^>]+src=["']([^"']+)["']/i)}
 function parse(xml){const blocks=[...(xml.match(/<item\b[\s\S]*?<\/item>/gi)||[]),...(xml.match(/<entry\b[\s\S]*?<\/entry>/gi)||[])];return blocks.slice(0,120).map(b=>{const title=tag(b,'title')||'Untitled technology story',url=link(b),description=(tag(b,'description')||tag(b,'summary')||tag(b,'content')).slice(0,340)||'Latest technology news from Tom\'s Hardware.',date=tag(b,'pubDate')||tag(b,'published')||tag(b,'updated')||new Date().toISOString();let publishedAt;try{publishedAt=new Date(date).toISOString()}catch{publishedAt=new Date().toISOString()}return{id:'th-'+hash(title+url),title,link:url,source:"Tom's Hardware",publishedAt,description,image:feedImage(b)}}).filter(x=>/^https?:\/\//i.test(x.link))}
-async function getFeed(){const c=new AbortController(),t=setTimeout(()=>c.abort(),3000);try{const r=await fetch(TOMS_FEED,{signal:c.signal,redirect:'follow',headers:{'user-agent':'Mozilla/5.0 AI-News-Now/6.0','accept':'application/rss+xml,application/atom+xml,application/xml,text/xml;q=0.9,*/*;q=0.5'}});if(!r.ok)throw Error(String(r.status));return parse(await r.text())}catch{return[]}finally{clearTimeout(t)}}
+async function getFeed(){const c=new AbortController(),t=setTimeout(()=>c.abort(),3000);try{const r=await fetch(TOMS_FEED,{signal:c.signal,redirect:'follow',headers:{'user-agent':'Mozilla/5.0 AI-News-Now/6.1','accept':'application/rss+xml,application/atom+xml,application/xml,text/xml;q=0.9,*/*;q=0.5'}});if(!r.ok)throw Error(String(r.status));return parse(await r.text())}catch{return[]}finally{clearTimeout(t)}}
 function recent(n){const t=+new Date(n.publishedAt),age=Date.now()-t;return Number.isFinite(t)&&age>=-60*60*1000&&age<=MAX_AGE_MS}
 function text(n){return `${n.title} ${n.description}`}
 function keep(n,category,q){const s=text(n);if(!recent(n)||!TECH.test(s))return false;if(q&&!s.toLowerCase().includes(q.toLowerCase()))return false;const re=TESTS[category];return re?re.test(s):true}
@@ -54,8 +55,8 @@ module.exports=async function(req,res){
   const proto=String(req.headers['x-forwarded-proto']||'https').split(',')[0].trim(),host=String(req.headers['x-forwarded-host']||req.headers.host||'').split(',')[0].trim(),origin=host?`${proto}://${host}`:'https://cert-forge-git-ai-news-now-site-cloud-drive.vercel.app';
   const extra=toms.filter(n=>keep(n,category,q)).map((n,i)=>({...n,topic:topic(n),whyItMatters:why(n),image:imageRoute(n,i,origin)}));
   const seen=new Set(),merged=[];
-  for(const n of [...(base.news||[]),...extra].sort((a,b)=>+new Date(b.publishedAt)-+new Date(a.publishedAt))){const k=key(n);if(!k||seen.has(k))continue;seen.add(k);merged.push(n)}
-  const max=category==='all-news'?90:60,news=merged.slice(0,max).map((n,i)=>({...n,importance:Math.max(1,100-i)}));
+  for(const n of [...(base.news||[]),...extra].sort((a,b)=>+new Date(b.publishedAt)-+new Date(a.publishedAt))){const k=key(n);if(!k||seen.has(k))continue;seen.add(k);merged.push(n);if(merged.length>=ARCHIVE_LIMIT)break}
+  const news=merged.map((n,i)=>({...n,importance:Math.max(1,ARCHIVE_LIMIT-i)}));
   const sourceCounts=news.reduce((a,n)=>(a[n.source]=(a[n.source]||0)+1,a),{});
   res.status(200).json({...base,updatedAt:new Date().toISOString(),refreshSeconds:60,maxAgeDays:15,category,query:q,count:news.length,ranking:'newest-first-worldwide-tech-only',sourceCounts,news});
 };
