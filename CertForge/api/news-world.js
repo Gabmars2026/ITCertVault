@@ -4,7 +4,8 @@ const techFeeds=[
   {source:'BBC Technology',url:'https://feeds.bbci.co.uk/news/technology/rss.xml'},
   {source:'Engadget',url:'https://www.engadget.com/rss.xml'},
   {source:'Ars Technica',url:'https://feeds.arstechnica.com/arstechnica/index'},
-  {source:'The Register',url:'https://www.theregister.com/headlines.atom'}
+  {source:'The Register',url:'https://www.theregister.com/headlines.atom'},
+  {source:'TechPowerUp',url:'https://www.techpowerup.com/rss/news'}
 ];
 const securityFeeds=[
   {source:'BleepingComputer',url:'https://www.bleepingcomputer.com/feed/'},
@@ -95,12 +96,12 @@ function dedupeKey(n){return n.title.toLowerCase().replace(/\s+-\s+[^-]{2,60}$/,
 function topic(n){const t=textOf(n);if(/cyber|ransomware|malware|breach|zero-day|vulnerab|phishing|hack|security/i.test(t))return'Cyber';if(/nvidia|amd|intel|gpu|chip|semiconductor|hardware|processor|data center/i.test(t))return'Hardware';if(/windows|linux|server|active directory|cloud|network|storage|database|infrastructure/i.test(t))return'IT';if(/openai|chatgpt|anthropic|claude|gemini|deepmind|artificial intelligence|\bai\b|llm|model/i.test(t))return'AI';if(/robot/i.test(t))return'Robotics';return'Tech'}
 function why(n){const k=topic(n);if(k==='Cyber')return'This may affect security exposure, defenses or incident response.';if(k==='Hardware')return'This may affect computing capacity, chips, devices or data-center infrastructure.';if(k==='IT')return'This may affect enterprise systems, cloud services, administrators or infrastructure.';if(k==='AI')return'This may change AI capabilities, products, developer workflows or adoption.';if(k==='Robotics')return'This may affect automation, manufacturing or autonomous systems.';return'This is a current technology development with potential global industry impact.'}
 function imageFor(n,i,origin){const p=new URLSearchParams({article:String(n.link||''),seed:String(n.id||hash(n.title+n.link+i)),title:String(n.title||'Technology news').slice(0,100),variant:String(i)});if(/^https?:\/\//i.test(n.image||''))p.set('image',n.image);return `${origin}/api/article-image?${p.toString()}`}
-function selectFeeds(category,q){const query=q?`"${q}" technology when:30d`:(queries[category]||queries.home);const google=regions.map(r=>googleFeed(query,r));if(category==='cybersecurity'||category==='breaking')return[...google,...securityFeeds];if(category==='sysadmin')return[...google,sysadminFeed,...securityFeeds.slice(0,2),techFeeds[4],techFeeds[5]];if(category==='it-news')return[...google,techFeeds[2],techFeeds[3],techFeeds[4],techFeeds[5]];if(category==='all-news'||category==='home')return[...google,...techFeeds,...securityFeeds.slice(0,2)];if(['hardware','robotics','business','coding'].includes(category))return[...google,...techFeeds];return[...google,...techFeeds.slice(0,4)]}
+function selectFeeds(category,q){const query=q?`"${q}" technology when:30d`:(queries[category]||queries.home);const google=regions.map(r=>googleFeed(query,r));if(category==='cybersecurity'||category==='breaking')return[...google,...securityFeeds];if(category==='sysadmin')return[...google,sysadminFeed,...securityFeeds.slice(0,2),techFeeds[4],techFeeds[5]];if(category==='it-news')return[...google,techFeeds[2],techFeeds[3],techFeeds[4],techFeeds[5],techFeeds[6]];if(category==='all-news'||category==='home')return[...google,...techFeeds,...securityFeeds.slice(0,2)];if(['hardware','robotics','business','coding'].includes(category))return[...google,...techFeeds];return[...google,...techFeeds.slice(0,4)]}
 
 module.exports=async function(req,res){
-  res.setHeader('Cache-Control','public, max-age=60, stale-while-revalidate=300');
-  res.setHeader('CDN-Cache-Control','public, max-age=300, stale-while-revalidate=900');
-  res.setHeader('Vercel-CDN-Cache-Control','public, max-age=300, stale-while-revalidate=900');
+  res.setHeader('Cache-Control','public, max-age=20, stale-while-revalidate=90');
+  res.setHeader('CDN-Cache-Control','public, max-age=30, stale-while-revalidate=120');
+  res.setHeader('Vercel-CDN-Cache-Control','public, max-age=30, stale-while-revalidate=120');
   const category=String(req.query?.category||'home').toLowerCase(),query=String(req.query?.q||'').trim().slice(0,120);
   const feeds=selectFeeds(category,query),raw=(await Promise.all(feeds.map(load))).flat(),seen=new Set();
   let news=raw.filter(n=>keep(n,category)).filter(n=>{const k=dedupeKey(n);if(!k||seen.has(k))return false;seen.add(k);return true}).sort((a,b)=>+new Date(b.publishedAt)-+new Date(a.publishedAt));
