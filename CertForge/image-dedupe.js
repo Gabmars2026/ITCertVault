@@ -1,4 +1,6 @@
 (()=>{
+if(!document.querySelector('link[href="/header-balance.css"]')){const l=document.createElement('link');l.rel='stylesheet';l.href='/header-balance.css';document.head.appendChild(l)}
+if(!document.querySelector('script[src="/breaking-live.js"]')){const s=document.createElement('script');s.src='/breaking-live.js';s.defer=true;document.head.appendChild(s)}
 const root=document.getElementById('app');if(!root||!window.crypto?.subtle)return;
 const exact=new Map(),visual=[];let scheduled=false,running=false,serial=0;
 const enc=s=>encodeURIComponent(String(s||''));
