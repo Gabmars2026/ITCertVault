@@ -6,7 +6,8 @@ const META={
   'ars-security':{title:'Ars Technica Security',desc:'Live Ars Technica security reporting with deeper technical coverage of vulnerabilities, privacy, hacking and security research.'},
   'dark-reading':{title:'Dark Reading',desc:'Live Dark Reading coverage of application security, cloud security, threat intelligence, vulnerabilities and security operations.'},
   'the-record':{title:'The Record',desc:'Live cyber news from Recorded Future News covering cybercrime, ransomware, nation-state operations, vulnerabilities and critical infrastructure.'},
-  'techpowerup':{title:'TechPowerUp',desc:'Live TechPowerUp hardware and technology news covering GPUs, CPUs, components, semiconductors and PC technology.'}
+  'techpowerup':{title:'TechPowerUp',desc:'Live TechPowerUp hardware, PC technology and security news covering GPUs, CPUs, components, vulnerabilities and platform updates.'},
+  'the-register':{title:'The Register',desc:'Live The Register coverage of enterprise IT, cloud, software, hardware, security, AI, infrastructure and system administration.'}
 };
 const key=location.pathname.split('/').filter(Boolean)[0]||'';const meta=META[key];if(!meta)return;
 const esc=s=>String(s||'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
