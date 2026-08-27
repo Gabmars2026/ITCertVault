@@ -1,8 +1,8 @@
 (()=>{
 const nativeFetch=window.fetch.bind(window);
-const CACHE_PREFIX='ainn-news-cache-v2:';
-const FRESH_MS=5*60*1000;
-const STALE_MS=24*60*60*1000;
+const CACHE_PREFIX='ainn-news-cache-v3:';
+const FRESH_MS=60*1000;
+const STALE_MS=2*60*60*1000;
 const TIMEOUT_MS=2500;
 function cacheKey(url){return CACHE_PREFIX+url}
 function readCache(url){try{const raw=localStorage.getItem(cacheKey(url));if(!raw)return null;const item=JSON.parse(raw);if(!item||!item.body||!item.ts)return null;const age=Date.now()-item.ts;if(age>STALE_MS){localStorage.removeItem(cacheKey(url));return null}return{...item,age}}catch{return null}}
