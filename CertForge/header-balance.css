@@ -1,0 +1,26 @@
+/* Keep the search truly centered while bringing the brand and actions closer to it. */
+@media (min-width:1101px){
+  .top.reference-header{
+    grid-template-columns:minmax(220px,260px) minmax(480px,560px) minmax(220px,260px)!important;
+    justify-content:center!important;
+    column-gap:18px!important;
+    padding-inline:18px!important;
+  }
+  .reference-header .brand{
+    justify-self:end!important;
+  }
+  .reference-header .search{
+    justify-self:stretch!important;
+    width:100%!important;
+    max-width:560px!important;
+  }
+  .reference-header .actions{
+    justify-self:start!important;
+  }
+}
+@media (min-width:1400px){
+  .top.reference-header{
+    grid-template-columns:270px 560px 270px!important;
+    column-gap:20px!important;
+  }
+}
