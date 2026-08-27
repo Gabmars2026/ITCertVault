@@ -1,0 +1,2 @@
+const chunks=[require('../data/ref-0'),require('../data/ref-1'),require('../data/ref-2'),require('../data/ref-3'),require('../data/ref-4'),require('../data/ref-5'),require('../data/ref-6'),require('../data/ref-7')];
+module.exports=function handler(req,res){const buf=Buffer.from(chunks.join(''),'base64');res.setHeader('Content-Type','image/webp');res.setHeader('Cache-Control','public, max-age=31536000, immutable');res.statusCode=200;res.end(buf)};
