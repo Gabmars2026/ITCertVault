@@ -16,6 +16,11 @@ const categoryQueries={
   hardware:'(Nvidia OR AMD OR Intel OR GPU OR "AI chip" OR "AI hardware" OR data center) when:30d',
   robotics:'("AI robot" OR robotics OR humanoid OR autonomous robot) when:60d',
   business:'("AI startup" OR "AI funding" OR "AI business" OR acquisition OR valuation OR enterprise AI) when:30d',
+  'topic-claude':'(Claude OR Anthropic) when:90d',
+  'topic-nvidia-earnings':'(Nvidia earnings OR Nvidia revenue OR Nvidia results OR Nvidia stock) when:90d',
+  'topic-gemini':'(Google Gemini OR Gemini AI OR Google DeepMind) when:90d',
+  'topic-sora':'(OpenAI Sora OR Sora video OR Sora AI) when:90d',
+  'topic-ai-agents':'("AI agents" OR agentic AI OR autonomous AI agents OR AI agent) when:60d',
   'all-news':'artificial intelligence when:7d',
   home:'artificial intelligence when:7d'
 };
@@ -47,13 +52,4 @@ async function load(f){try{return parse((await getText(f.url)).text,f.source)}ca
 function ogImage(html){return attr(html,/<meta[^>]+property=["']og:image(?::secure_url)?["'][^>]+content=["']([^"']+)["']/i)||attr(html,/<meta[^>]+content=["']([^"']+)["'][^>]+property=["']og:image(?::secure_url)?["']/i)||attr(html,/<meta[^>]+name=["']twitter:image(?::src)?["'][^>]+content=["']([^"']+)["']/i)||attr(html,/<meta[^>]+content=["']([^"']+)["'][^>]+name=["']twitter:image(?::src)?["']/i)}
 async function enrich(n,i){let image=n.image;if(n.source!=='Google News'){try{const page=await getText(n.link,3200),og=ogImage(page.text);if(og)image=og.startsWith('//')?'https:'+og:og;if(page.url&&!page.url.includes('news.google.com'))n.link=page.url}catch{}}return{...n,image:/^https?:\/\//i.test(image||'')?image:fallbackImages[i%fallbackImages.length]}}
 function googleFeedFor(category){const q=categoryQueries[category]||categoryQueries.home;return{source:'Google News',url:`https://news.google.com/rss/search?q=${encodeURIComponent(q)}&hl=en-US&gl=US&ceid=US:en`}}
-module.exports=async function(req,res){
-  res.setHeader('Cache-Control','s-maxage=300, stale-while-revalidate=900');
-  const category=String(req.query?.category||'home').toLowerCase();
-  const feeds=[googleFeedFor(category),...baseFeeds];
-  let live=(await Promise.all(feeds.map(load))).flat(),pool=live.length>=12?live:[...live,...fallback],seen=new Set();
-  let news=pool.filter(n=>{let k=n.title.toLowerCase().replace(/[^a-z0-9]+/g,' ').split(' ').slice(0,11).join(' ');if(seen.has(k))return false;seen.add(k);return true}).sort((a,b)=>+new Date(b.publishedAt)-+new Date(a.publishedAt)).slice(0,80);
-  const top=await Promise.all(news.slice(0,18).map(enrich));
-  news=[...top,...news.slice(18).map((n,i)=>({...n,image:/^https?:\/\//i.test(n.image||'')?n.image:fallbackImages[(i+top.length)%fallbackImages.length]}))];
-  res.status(200).json({updatedAt:new Date().toISOString(),category,count:news.length,news});
-};
+module.exports=async function(req,res){res.setHeader('Cache-Control','s-maxage=300, stale-while-revalidate=900');const category=String(req.query?.category||'home').toLowerCase();const feeds=[googleFeedFor(category),...baseFeeds];let live=(await Promise.all(feeds.map(load))).flat(),pool=live.length>=12?live:[...live,...fallback],seen=new Set();let news=pool.filter(n=>{let k=n.title.toLowerCase().replace(/[^a-z0-9]+/g,' ').split(' ').slice(0,11).join(' ');if(seen.has(k))return false;seen.add(k);return true}).sort((a,b)=>+new Date(b.publishedAt)-+new Date(a.publishedAt)).slice(0,80);const top=await Promise.all(news.slice(0,18).map(enrich));news=[...top,...news.slice(18).map((n,i)=>({...n,image:/^https?:\/\//i.test(n.image||'')?n.image:fallbackImages[(i+top.length)%fallbackImages.length]}))];res.status(200).json({updatedAt:new Date().toISOString(),category,count:news.length,news})};
