@@ -1,5 +1,6 @@
 const baseHandler=require('./news-complete');
 const MAX_AGE_MS=15*24*60*60*1000;
+const PAGE_SIZE=30,MAX_PAGES=15,ARCHIVE_LIMIT=PAGE_SIZE*MAX_PAGES;
 const SHOPPING=/(save up to|\bdiscounts?\b|\bcoupons?\b|\bclearance\b|\bgift guide\b|labor day sale|black friday|prime day|\bcheapest\b|\b\d+% off\b|save \$\d+|\bsale price\b|shopping deal|best deal|deal of the day|iphone deals?|verizon deals?|laptop deals?|gpu deals?|ssd deals?|monitor deals?|headset deals?|keyboard deals?|mouse deals?|\$\d+(?:\.\d+)? for life|special offer|free digital copy|bundle .{0,35} game)/i;
 const GENERIC=/(school district|high school|classroom|university workshop|university of .* school of business|business school|technology training|training with ai|care sector|care home|what leaders can do that technology|smart floor care|facilities technology conversation|software development partners|submit your questions|webinar:|course on|curriculum|conference registration|industry-focused technology training|\bscholarships?\b|\bfellowships?\b|call for applications|fully funded phd|\bteachers?\b|education program|student program)/i;
 const SCIENCE_ONLY=/(physicists? .* quantum fluctuations|quantum fluctuations of empty space|drug-docking|archaeolog|\bunderpants\b|\bsoil test\b|\bsoil study\b|cacao|medical study|clinical trial)/i;
@@ -18,14 +19,16 @@ function queryMatch(n,q=''){const raw=String(q||'').trim().toLowerCase();if(!raw
 function wanted(n,q=''){const t=text(n),source=String(n.source||'');if(!recent(n))return false;if(!queryMatch(n,q))return false;if(SHOPPING.test(t))return false;if(GENERIC.test(t))return false;if(FINANCE_NOISE.test(t))return false;if(SCIENCE_ONLY.test(t)&&!COMPUTING_QUANTUM.test(t))return false;if(LEGAL.test(t)&&!CYBER_EVENT.test(t))return false;if(AUTO.test(t)&&!AUTO_TECH.test(t))return false;if(/^Google News\b/i.test(source)&&!HARD_TECH.test(t))return false;if(!HARD_TECH.test(t)&&!/TechPowerUp|TechCrunch|The Verge|The Register|Tom's Hardware|BleepingComputer|The Hacker News|SecurityWeek|Ars Technica|BBC Technology|Engadget|Cybernews/i.test(source))return false;return true}
 function normWords(title=''){return String(title).toLowerCase().replace(/\s+-\s+[^-]{2,80}$/,'').replace(/[^a-z0-9]+/g,' ').trim().split(' ').map(w=>w.length>4?w.replace(/(?:ies|es|s)$/,''):w).filter(w=>w.length>2&&!STOP.has(w)).slice(0,20)}
 function sameStory(a,b){const A=new Set(normWords(a.title)),B=new Set(normWords(b.title));if(!A.size||!B.size)return false;let hit=0;for(const w of A)if(B.has(w))hit++;if(hit>=4&&hit/Math.min(A.size,B.size)>=.55)return true;const aw=normWords(a.title),bw=normWords(b.title),ta=(a.title+' '+a.description).toLowerCase(),tb=(b.title+' '+b.description).toLowerCase();const wearable=/\b(earbuds?|earphones?|wearable)\b/i;if(aw[0]&&aw[0]===bw[0]&&wearable.test(ta)&&wearable.test(tb)&&hit>=2)return true;return false}
-function dedupe(items){const out=[],keys=new Set();for(const n of items){const k=normWords(n.title).slice(0,12).join(' ');if(!k||keys.has(k))continue;if(out.some(x=>Math.abs(new Date(x.publishedAt)-new Date(n.publishedAt))<36*36e5&&sameStory(x,n)))continue;keys.add(k);out.push(n)}return out}
+function dedupe(items){const out=[],keys=new Set();for(const n of items){const k=normWords(n.title).slice(0,12).join(' ');if(!k||keys.has(k))continue;if(out.some(x=>Math.abs(new Date(x.publishedAt)-new Date(n.publishedAt))<36*36e5&&sameStory(x,n)))continue;keys.add(k);out.push(n);if(out.length>=ARCHIVE_LIMIT)break}return out}
+function clampPage(v){const n=parseInt(v,10);return Number.isFinite(n)?Math.min(MAX_PAGES,Math.max(1,n)):1}
 module.exports=async function(req,res){
   res.setHeader('Cache-Control','public, max-age=20, stale-while-revalidate=60');
   res.setHeader('CDN-Cache-Control','public, max-age=30, stale-while-revalidate=60');
   res.setHeader('Vercel-CDN-Cache-Control','public, max-age=30, stale-while-revalidate=60');
   const base=await getBase(req),category=String(req.query?.category||base.category||'home').toLowerCase(),q=String(req.query?.q||base.query||'').trim().slice(0,120);
-  const max=category==='all-news'?90:60;
-  const news=dedupe((base.news||[]).filter(n=>wanted(n,q)).sort((a,b)=>+new Date(b.publishedAt)-+new Date(a.publishedAt))).slice(0,max).map((n,i)=>({...n,importance:Math.max(1,100-i)}));
-  const sourceCounts=news.reduce((a,n)=>(a[n.source]=(a[n.source]||0)+1,a),{});
-  res.status(200).json({...base,updatedAt:new Date().toISOString(),refreshSeconds:60,maxAgeDays:15,category,query:q,count:news.length,ranking:'newest-first-strict-worldwide-tech-only',sourceCounts,news});
+  const requestedPage=clampPage(req.query?.page),all=dedupe((base.news||[]).filter(n=>wanted(n,q)).sort((a,b)=>+new Date(b.publishedAt)-+new Date(a.publishedAt)));
+  const totalCount=all.length,totalPages=Math.max(1,Math.min(MAX_PAGES,Math.ceil(totalCount/PAGE_SIZE))),page=Math.min(requestedPage,totalPages),start=(page-1)*PAGE_SIZE;
+  const news=all.slice(start,start+PAGE_SIZE).map((n,i)=>({...n,importance:Math.max(1,ARCHIVE_LIMIT-(start+i))}));
+  const sourceCounts=all.reduce((a,n)=>(a[n.source]=(a[n.source]||0)+1,a),{});
+  res.status(200).json({...base,updatedAt:new Date().toISOString(),refreshSeconds:60,maxAgeDays:15,category,query:q,count:news.length,totalCount,page,perPage:PAGE_SIZE,totalPages,maxPages:MAX_PAGES,hasPrev:page>1,hasNext:page<totalPages,ranking:'newest-first-strict-worldwide-tech-only',sourceCounts,news});
 };
