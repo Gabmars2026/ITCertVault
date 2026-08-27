@@ -10,7 +10,8 @@
       ['/bleepingcomputer/','BleepingComputer'],
       ['/hacker-news/','The Hacker News'],
       ['/ars-security/','Ars Technica Security'],
-      ['/techpowerup/','TechPowerUp']
+      ['/techpowerup/','TechPowerUp'],
+      ['/the-register/','The Register']
     ],
     TECHNOLOGY:[
       ['/it-news/','IT News'],
