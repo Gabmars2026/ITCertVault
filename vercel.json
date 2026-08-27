@@ -1,6 +1,1 @@
-{
-  "$schema": "https://openapi.vercel.sh/vercel.json",
-  "buildCommand": "node build.cjs",
-  "outputDirectory": "dist",
-  "installCommand": ""
-}
+{"cleanUrls":true,"trailingSlash":true,"rewrites":[{"source":"/breaking/:path*","destination":"/index.html"},{"source":"/chatgpt/:path*","destination":"/index.html"},{"source":"/claude/:path*","destination":"/index.html"},{"source":"/gemini/:path*","destination":"/index.html"},{"source":"/ai-models/:path*","destination":"/index.html"},{"source":"/ai-video/:path*","destination":"/index.html"},{"source":"/ai-images/:path*","destination":"/index.html"},{"source":"/coding/:path*","destination":"/index.html"},{"source":"/hardware/:path*","destination":"/index.html"},{"source":"/robotics/:path*","destination":"/index.html"},{"source":"/business/:path*","destination":"/index.html"},{"source":"/all-news/:path*","destination":"/index.html"},{"source":"/search/:path*","destination":"/index.html"},{"source":"/subscribe/:path*","destination":"/index.html"},{"source":"/about/:path*","destination":"/index.html"}],"headers":[{"source":"/(.*)","headers":[{"key":"X-Content-Type-Options","value":"nosniff"},{"key":"Referrer-Policy","value":"strict-origin-when-cross-origin"}]}]}
