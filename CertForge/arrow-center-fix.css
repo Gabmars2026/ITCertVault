@@ -1,0 +1,28 @@
+.hero .arr{
+  padding:0!important;
+  font-size:0!important;
+  line-height:0!important;
+  display:grid!important;
+  place-items:center!important;
+}
+.hero .arr::before{
+  content:"";
+  position:absolute;
+  left:50%;
+  top:50%;
+  width:9px;
+  height:9px;
+  border-right:2.5px solid currentColor;
+  border-bottom:2.5px solid currentColor;
+  transform-origin:50% 50%;
+  pointer-events:none;
+}
+.hero .arr.r::before{
+  transform:translate(-50%,-50%) rotate(-45deg);
+}
+.hero .arr.l::before{
+  transform:translate(-50%,-50%) rotate(135deg);
+}
+@media(max-width:560px){
+  .hero .arr::before{width:8px;height:8px;border-width:2px}
+}
