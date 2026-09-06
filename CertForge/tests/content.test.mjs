@@ -5,7 +5,8 @@ import { questionBank } from "../lib/questions.ts";
 import { buildingBlocks, fullBuilds } from "../lib/scripts.ts";
 import { topologies } from "../lib/topologies.ts";
 import { books } from "../lib/books.ts";
-import { workplaceScenarios } from "../lib/workplace-scenarios.ts";
+import { ccnpTicketCatalog } from "../lib/ccnp-ticket-catalog.ts";
+import { difficultyCounts, workplaceScenarios } from "../lib/workplace-scenarios.ts";
 
 test("question bank contains 600 unique, answerable items", () => {
   assert.equal(questionBank.length, 600);
@@ -13,7 +14,6 @@ test("question bank contains 600 unique, answerable items", () => {
   assert.equal(new Set(questionBank.map((question) => question.prompt)).size, 600);
   assert.equal(questionBank.filter((question) => question.certification === "CCNA").length, 360);
   assert.equal(questionBank.filter((question) => question.certification === "ENCOR").length, 240);
-
   for (const question of questionBank) {
     assert.equal(question.choices.length, 4, `${question.id} should have four choices`);
     assert.ok(question.answer >= 0 && question.answer < question.choices.length, `${question.id} needs a valid answer`);
@@ -54,8 +54,60 @@ test("library includes three structured networking books", () => {
   assert.ok(books.flatMap((book) => book.chapters).every((item) => item.sections.length >= 2 && item.lab.steps.length >= 5 && item.review.length >= 3));
 });
 
-test("workplace scenario bank contains 200 answerable incidents", () => {
+test("CCNP catalog contains 200 distinct production incident definitions", () => {
+  assert.equal(ccnpTicketCatalog.length, 200);
+  assert.equal(new Set(ccnpTicketCatalog.map((item) => item.title)).size, 200);
+  assert.equal(new Set(ccnpTicketCatalog.map((item) => item.rootCause)).size, 200);
+  assert.ok(ccnpTicketCatalog.every((item) => item.domain && item.change && item.complaint && item.evidence && item.fix));
+});
+
+test("CCNP workplace scenarios use the exact five requested difficulty ranges", () => {
   assert.equal(workplaceScenarios.length, 200);
-  assert.equal(new Set(workplaceScenarios.map((item) => item.id)).size, 200);
-  assert.ok(workplaceScenarios.every((item) => item.evidence.length >= 4 && item.answer.length > 100));
+  assert.equal(difficultyCounts["Junior Network Engineer"], 40);
+  assert.equal(difficultyCounts["Network Engineer"], 50);
+  assert.equal(difficultyCounts["Senior Network Engineer"], 50);
+  assert.equal(difficultyCounts["Advanced Enterprise Engineer"], 40);
+  assert.equal(difficultyCounts["Expert / Multi-Failure Production Incident"], 20);
+  assert.ok(workplaceScenarios.slice(0, 40).every((item) => item.difficulty === "Junior Network Engineer"));
+  assert.ok(workplaceScenarios.slice(40, 90).every((item) => item.difficulty === "Network Engineer"));
+  assert.ok(workplaceScenarios.slice(90, 140).every((item) => item.difficulty === "Senior Network Engineer"));
+  assert.ok(workplaceScenarios.slice(140, 180).every((item) => item.difficulty === "Advanced Enterprise Engineer"));
+  assert.ok(workplaceScenarios.slice(180).every((item) => item.difficulty === "Expert / Multi-Failure Production Incident" && item.multiFailure));
+});
+
+test("every CCNP ticket contains all investigation and hidden-resolution content", () => {
+  const ids = new Set();
+  const roots = new Set();
+  for (const item of workplaceScenarios) {
+    assert.ok(!ids.has(item.id), `${item.ticketNumber} duplicate id`); ids.add(item.id);
+    assert.ok(!roots.has(item.rootCause), `${item.ticketNumber} duplicate root cause`); roots.add(item.rootCause);
+    assert.match(item.ticketNumber, /^CCNP-\d{3}$/);
+    assert.ok(item.companyEnvironment.length > 40);
+    assert.ok(item.topology.length > 40);
+    assert.ok(item.complaint.length > 30);
+    assert.ok(item.symptoms.length >= 4);
+    assert.ok(item.cliOutput.length > 25);
+    assert.ok(item.whatChanged.length > 20);
+    assert.ok(item.clues.length >= 3);
+    assert.equal(item.investigateFirst.length, 5);
+    assert.ok(item.commandsToRun.length >= 5);
+    assert.ok(item.diagnosisPrompt.length > 80);
+    assert.ok(item.rootCause.length > 30);
+    assert.ok(item.troubleshootingProcess.length >= 7);
+    assert.ok(item.fixCommands.length >= 1);
+    assert.ok(item.verificationCommands.length >= 3);
+    assert.ok(item.expectedOutput.length > 120);
+    assert.ok(item.whyItHappened.length > 80);
+    assert.ok(item.prevention.length >= 3);
+    assert.ok(item.productionTicketNotes.length >= 6);
+  }
+});
+
+test("ticket domains cover the requested enterprise technology families", () => {
+  const domains = workplaceScenarios.map((item) => item.domain).join(" | ");
+  for (const required of [
+    "VLAN", "STP", "EtherChannel", "Inter-VLAN", "OSPF", "EIGRP", "BGP", "redistribution",
+    "HSRP", "ACL", "NAT", "DHCP", "IPv4", "QoS", "wireless", "VPN", "security", "AAA",
+    "SNMP", "SD-WAN", "Catalyst Center", "APIs", "Campus", "Performance", "Configuration"
+  ]) assert.ok(domains.toLowerCase().includes(required.toLowerCase()), `missing domain family ${required}`);
 });
