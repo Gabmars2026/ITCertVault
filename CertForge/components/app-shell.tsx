@@ -5,8 +5,10 @@ import { usePathname } from "next/navigation";
 import {
   Activity,
   BookOpenCheck,
+  BookOpenText,
   Boxes,
   Braces,
+  ChevronRight,
   CircleUserRound,
   FileQuestion,
   GraduationCap,
@@ -27,15 +29,21 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
+  SidebarMenuSub,
+  SidebarMenuSubButton,
+  SidebarMenuSubItem,
   SidebarProvider,
   SidebarRail,
   SidebarTrigger,
 } from "@/components/ui/sidebar";
 import { Button } from "@/components/ui/button";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 
 const navItems = [
   { href: "/", label: "Command Center", icon: Activity },
   { href: "/learn", label: "Learning Path", icon: GraduationCap },
+  { href: "/books", label: "Books", icon: BookOpenText },
+  { href: "/scenarios", label: "200 Work Scenarios", icon: BookOpenCheck, badge: "200" },
   { href: "/practice", label: "Question Bank", icon: FileQuestion, badge: "600" },
   { href: "/exam", label: "Practice Exams", icon: TimerReset },
   { href: "/drag-drop", label: "Drag & Drop", icon: GripVertical },
@@ -94,6 +102,24 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                 {navItems.map((item) => {
                   const Icon = item.icon;
                   const active = item.href === "/" ? pathname === "/" : pathname.startsWith(item.href);
+                  if (item.href === "/books") return (
+                    <Collapsible key={item.href} asChild defaultOpen={pathname.startsWith("/books")} className="group/collapsible">
+                      <SidebarMenuItem>
+                        <CollapsibleTrigger asChild>
+                          <SidebarMenuButton isActive={active} tooltip="Books">
+                            <BookOpenText /><span>Books</span><ChevronRight className="ml-auto transition-transform group-data-[state=open]/collapsible:rotate-90 group-data-[collapsible=icon]:hidden" />
+                          </SidebarMenuButton>
+                        </CollapsibleTrigger>
+                        <CollapsibleContent>
+                          <SidebarMenuSub>
+                            {[{ href: "/books/ccna", label: "CCNA Book" }, { href: "/books/encor", label: "CCNP ENCOR" }, { href: "/books/ccnp-enterprise", label: "CCNP Enterprise" }].map((book) => (
+                              <SidebarMenuSubItem key={book.href}><SidebarMenuSubButton asChild isActive={pathname.startsWith(book.href)}><Link href={book.href}><span>{book.label}</span></Link></SidebarMenuSubButton></SidebarMenuSubItem>
+                            ))}
+                          </SidebarMenuSub>
+                        </CollapsibleContent>
+                      </SidebarMenuItem>
+                    </Collapsible>
+                  );
                   return (
                     <SidebarMenuItem key={item.href}>
                       <SidebarMenuButton asChild isActive={active} tooltip={item.label}>

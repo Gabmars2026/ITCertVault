@@ -4,6 +4,8 @@ import { dragExercises } from "../lib/drag-exercises.ts";
 import { questionBank } from "../lib/questions.ts";
 import { buildingBlocks, fullBuilds } from "../lib/scripts.ts";
 import { topologies } from "../lib/topologies.ts";
+import { books } from "../lib/books.ts";
+import { workplaceScenarios } from "../lib/workplace-scenarios.ts";
 
 test("question bank contains 600 unique, answerable items", () => {
   assert.equal(questionBank.length, 600);
@@ -44,4 +46,16 @@ test("script library progresses from snippets to complete builds", () => {
   assert.ok(buildingBlocks.every((lesson) => !lesson.full));
   assert.ok(fullBuilds.every((lesson) => lesson.full));
   assert.ok([...buildingBlocks, ...fullBuilds].every((lesson) => lesson.code && lesson.verify.length));
+});
+
+test("library includes three structured networking books", () => {
+  assert.deepEqual(books.map((book) => book.slug), ["ccna", "encor", "ccnp-enterprise"]);
+  assert.ok(books.every((book) => book.chapters.length >= 8));
+  assert.ok(books.flatMap((book) => book.chapters).every((item) => item.sections.length >= 2 && item.lab.steps.length >= 5 && item.review.length >= 3));
+});
+
+test("workplace scenario bank contains 200 answerable incidents", () => {
+  assert.equal(workplaceScenarios.length, 200);
+  assert.equal(new Set(workplaceScenarios.map((item) => item.id)).size, 200);
+  assert.ok(workplaceScenarios.every((item) => item.evidence.length >= 4 && item.answer.length > 100));
 });
