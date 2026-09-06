@@ -177,6 +177,16 @@ body {
   background: #0b1620;
 }
 
+/* Keep Vercel's floating preview/feedback toolbar off every page. */
+vercel-live-feedback,
+#vercel-toolbar,
+.vercel-live-feedback,
+[data-vercel-feedback] {
+  display: none !important;
+  visibility: hidden !important;
+  pointer-events: none !important;
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
