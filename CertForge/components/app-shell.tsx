@@ -43,6 +43,7 @@ const navItems = [
   { href: "/", label: "Command Center", icon: Activity },
   { href: "/learn", label: "Learning Path", icon: GraduationCap },
   { href: "/books", label: "Books", icon: BookOpenText },
+  { href: "/ccna-tickets", label: "CCNA Tickets", icon: BookOpenCheck, badge: "200" },
   { href: "/scenarios", label: "CCNP Tickets", icon: BookOpenCheck, badge: "200" },
   { href: "/practice", label: "Question Bank", icon: FileQuestion, badge: "600" },
   { href: "/exam", label: "Practice Exams", icon: TimerReset },
