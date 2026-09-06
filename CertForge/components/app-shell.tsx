@@ -43,7 +43,7 @@ const navItems = [
   { href: "/", label: "Command Center", icon: Activity },
   { href: "/learn", label: "Learning Path", icon: GraduationCap },
   { href: "/books", label: "Books", icon: BookOpenText },
-  { href: "/scenarios", label: "200 Work Scenarios", icon: BookOpenCheck, badge: "200" },
+  { href: "/scenarios", label: "CCNP Tickets", icon: BookOpenCheck, badge: "200" },
   { href: "/practice", label: "Question Bank", icon: FileQuestion, badge: "600" },
   { href: "/exam", label: "Practice Exams", icon: TimerReset },
   { href: "/drag-drop", label: "Drag & Drop", icon: GripVertical },
@@ -90,7 +90,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             </span>
             <span className="min-w-0 group-data-[collapsible=icon]:hidden">
               <span className="block truncate font-semibold tracking-tight">Gianni Network Lab</span>
-              <span className="block truncate font-mono text-[11px] text-muted-foreground">CCNA → ENCOR</span>
+              <span className="block truncate font-mono text-[11px] text-muted-foreground">CCNA → ENCOR → ENTERPRISE</span>
             </span>
           </Link>
         </SidebarHeader>
