@@ -1,1 +1,23 @@
-PLACEHOLDER
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#06111f"><title>CCNA 500 Interview Lab | ITCertVault</title>
+<link rel="stylesheet" href="ccna-compact.css"></head><body>
+<header><div class="bar wrap"><a class="brand" href="/"><span class="logo">IT</span><span>ITCertVault · CCNA Interview Lab</span></a><div><button class="btn" onclick="window.print()">Print</button> <button class="btn red" id="randomTop">Random Interview</button></div></div></header>
+<main><section class="hero wrap"><div><div class="eye">200-301 CCNA · Interview preparation</div><h1><b>500</b> CCNA Interview Questions</h1><p class="lead">Built from the current Cisco CCNA scope and recurring real interview themes discussed by network engineers and candidates online. Every question is unique, searchable, and paired with an answer framework, Cisco IOS commands, and a topology drawing.</p><button class="btn red" onclick="document.querySelector('#bank').scrollIntoView()">Start Studying</button></div><div class="stats"><div class="stat"><strong>500</strong><span>Questions</span></div><div class="stat"><strong>25</strong><span>Categories</span></div><div class="stat"><strong>25</strong><span>Topology labs</span></div><div class="stat"><strong id="pct">0%</strong><span>Studied</span></div></div></section>
+<section class="wrap"><div class="eye">Featured topology · based on your example</div><h2>VTP — VLAN Trunking Protocol</h2><div class="feature"><div class="paper"><h3>VTP VLAN Trunking Protocol</h3><div id="vtpFeature"></div></div><div class="code"><b>VTP Server Configuration</b><pre>SW1# configure terminal
+SW1(config)# vtp domain CCNA
+SW1(config)# vtp mode server
+SW1(config)# vtp password cisco
+SW1(config)# vtp version 2
+SW1(config)# vlan 10
+SW1(config-vlan)# name SALES
+SW1(config)# vlan 20
+SW1(config-vlan)# name HR
+SW1(config)# vlan 30
+SW1(config-vlan)# name IT
+SW1(config)# interface gi0/1
+SW1(config-if)# switchport mode trunk
+SW1(config-if)# no shutdown</pre><p style="color:#9db3ca;line-height:1.55">Explain the trunk first, then VTP domain, mode, version, password, revision behavior, and verification. Do not treat VTP as magic VLAN propagation.</p></div></div></section>
+<section class="wrap" id="bank"><div class="eye">Search · filter · practice</div><h2>500-Question Interview Bank</h2><div class="toolbar"><input id="search" placeholder="Search OSPF, VLAN, DHCP, troubleshooting..."><select id="cat"><option value="">All categories</option></select><select id="diff"><option value="">All levels</option><option>Beginner</option><option>Intermediate</option><option>Advanced</option></select><button class="btn red" id="random">Random</button></div><div class="progress"><b id="progText">0 / 500 studied</b><div class="track"><i id="bar"></i></div><button class="sm" id="reset">Reset</button></div><div class="chips" id="chips"></div><div class="grid" id="grid"></div><button class="more" id="more">Show 30 More</button></section>
+<section class="wrap sources"><div class="eye">Research basis</div><h2>What this covers</h2><p>Cisco's current 200-301 CCNA v1.1 exam covers network fundamentals, network access, IP connectivity, IP services, security fundamentals, and automation/programming. Reddit interview threads repeatedly emphasize subnetting, ARP/MAC behavior, VLANs, STP, OSPF, DHCP/DNS, NAT, routing decisions, troubleshooting, and explaining your reasoning aloud.</p><a target="_blank" rel="noopener" href="https://www.cisco.com/site/us/en/learn/training-certifications/exams/ccna.html">Cisco CCNA</a><a target="_blank" rel="noopener" href="https://www.reddit.com/r/ccna/comments/18gqyhk/">Reddit interview thread</a><a target="_blank" rel="noopener" href="https://www.reddit.com/r/ccna/comments/1uk1ima/">Reddit CCNA advice</a><a target="_blank" rel="noopener" href="https://www.reddit.com/r/ccna/comments/1vgz4m7/">Reddit 2026 interview questions</a></section></main>
+<footer><div class="wrap">ITCertVault · CCNA Interview Lab · 500 unique study questions · Scalable SVG topology drawings</div></footer>
+<dialog id="dlg"><div class="dh"><h3 id="dlgTitle">Topology</h3><button class="x" id="close">×</button></div><div id="modalBody"></div></dialog>
+<script src="ccna-cats-1.js"></script><script src="ccna-cats-2.js"></script><script src="ccna-app.js"></script></body></html>
