@@ -12,7 +12,7 @@ const appDist = path.join(appRoot, 'dist');
 const out = path.join(root, 'dist');
 
 if (!fs.existsSync(appBuild)) {
-  throw new Error('Current CertForge build script was not found.');
+  throw new Error('Current ByteBadge build script was not found.');
 }
 
 execFileSync(process.execPath, [appBuild], {
@@ -21,11 +21,11 @@ execFileSync(process.execPath, [appBuild], {
 });
 
 if (!fs.existsSync(appDist)) {
-  throw new Error('CertForge build completed without creating dist/.');
+  throw new Error('ByteBadge build completed without creating dist/.');
 }
 
 // The authoritative 332-cert metadata is injected into ITCV_META by the
-// CertForge build. CERT_META must be a working copy, not the same array.
+// app build. CERT_META must be a working copy, not the same array.
 // Historical startup code appends legacy entries to CERT_META; when both
 // variables share one array, those appends also corrupt ITCV_META and turn
 // the verified 332-cert seed into 458 entries before the final reset.
@@ -33,7 +33,7 @@ if (!fs.existsSync(appDist)) {
 // if its exact shape changes, so production can never silently regress.
 const generatedIndex = path.join(appDist, 'index.html');
 if (!fs.existsSync(generatedIndex)) {
-  throw new Error('CertForge build completed without dist/index.html.');
+  throw new Error('ByteBadge build completed without dist/index.html.');
 }
 let productionHtml = fs.readFileSync(generatedIndex, 'utf8');
 const sharedCatalogAlias = 'window.CERT_META=window.ITCV_META;';
@@ -46,10 +46,24 @@ productionHtml = productionHtml.replace(sharedCatalogAlias, isolatedCatalogCopy)
 if (productionHtml.includes(sharedCatalogAlias) || !productionHtml.includes(isolatedCatalogCopy)) {
   throw new Error('Failed to isolate the production CERT_META working copy from the authoritative 332-cert seed.');
 }
+
+// Apply the public ByteBadge branding at the final production boundary.
+// Internal ITCV variable names remain untouched; only human-readable legacy
+// product names are replaced in the generated HTML and inline text.
+productionHtml = productionHtml
+  .replace(/CertForge/g, 'ByteBadge')
+  .replace(/ITCertVault/g, 'ByteBadge');
+
+if (productionHtml.includes('CertForge') || productionHtml.includes('ITCertVault')) {
+  throw new Error('Legacy product branding remains in the generated production page.');
+}
+
 fs.writeFileSync(generatedIndex, productionHtml, 'utf8');
 console.log('Isolated CERT_META from ITCV_META so legacy appends cannot mutate the verified 332-cert seed.');
+console.log('Applied ByteBadge production branding.');
 
+// Publish the finished app output.
 fs.rmSync(out, { recursive: true, force: true });
 fs.cpSync(appDist, out, { recursive: true });
 
-console.log('Published CertForge/dist as the ITCertVault production output.');
+console.log('Published ByteBadge production output.');
