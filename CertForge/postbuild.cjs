@@ -82,8 +82,19 @@ if (!html.includes('window.CF_BLOB={version:"local-runtime",base:"",manifest:{}}
   throw new Error('postbuild: local study-content manifest replacement was not applied');
 }
 
+// Final public branding. Keep internal ITCV identifiers intact while replacing
+// the historical product names everywhere users can see them.
+html = html
+  .replace(/CertForge/g, 'ByteBadge')
+  .replace(/ITCertVault/g, 'ByteBadge');
+
+if (html.includes('CertForge') || html.includes('ITCertVault')) {
+  throw new Error('postbuild: legacy product branding remains in the production HTML');
+}
+
 fs.writeFileSync(generatedIndex, html, 'utf8');
 
 console.log(`postbuild: published direct Safari-safe production page (${html.length.toLocaleString()} chars).`);
 console.log(`postbuild: removed ${legacyBlobCount} legacy blob manifest reference(s).`);
 console.log('postbuild: all-cert study/video runtime injected before application startup.');
+console.log('postbuild: ByteBadge branding applied.');
